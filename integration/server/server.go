@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/valyala/fasthttp"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -43,9 +43,20 @@ func main() {
 	})
 	srv.Use(extension.FixedComplexityLimit(1000))
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	serverHandler := srv.Handler()
+	playgroundHandler := playground.Handler("GraphQL playground", "/query")
+
+	requestHandler := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/":
+			playgroundHandler(ctx)
+		case "/query":
+			serverHandler(ctx)
+		default:
+			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
+		}
+	}
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(fasthttp.ListenAndServe(":"+port, requestHandler))
 }

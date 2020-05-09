@@ -94,7 +94,7 @@ func (s *Server) getTransport(ctx *fasthttp.RequestCtx) graphql.Transport {
 	return nil
 }
 
-func (s *Server) ServeHTTP() func(ctx *fasthttp.RequestCtx) {
+func (s *Server) Handler() fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		defer func() {
 			if err := recover(); err != nil {

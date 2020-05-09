@@ -2,7 +2,8 @@ package playground
 
 import (
 	"html/template"
-	"net/http"
+
+	"github.com/valyala/fasthttp"
 )
 
 var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
@@ -44,10 +45,10 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 </html>
 `))
 
-func Handler(title string, endpoint string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "text/html")
-		err := page.Execute(w, map[string]string{
+func Handler(title string, endpoint string) fasthttp.RequestHandler {
+	return func(ctx *fasthttp.RequestCtx) {
+		ctx.SetContentType("text/html")
+		err := page.Execute(ctx, map[string]string{
 			"title":      title,
 			"endpoint":   endpoint,
 			"version":    "1.7.20",

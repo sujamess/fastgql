@@ -11,11 +11,12 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
+	"github.com/valyala/fasthttp"
 )
 
 // Deprecated: switch to graphql/handler.New
-func GraphQL(exec graphql.ExecutableSchema, options ...Option) http.HandlerFunc {
+func GraphQL(exec graphql.ExecutableSchema, options ...Option) func(*fasthttp.RequestCtx) {
 	var cfg Config
 	cfg.cacheSize = 1000
 
@@ -68,13 +69,13 @@ func GraphQL(exec graphql.ExecutableSchema, options ...Option) http.HandlerFunc 
 	if cfg.apqCache != nil {
 		srv.Use(extension.AutomaticPersistedQuery{Cache: apqAdapter{cfg.apqCache}})
 	}
-	return srv.ServeHTTP
+	return srv.Handler()
 }
 
 // Deprecated: switch to graphql/handler.New
 type Config struct {
 	cacheSize                       int
-	upgrader                        websocket.Upgrader
+	upgrader                        websocket.FastHTTPUpgrader
 	websocketInitFunc               transport.WebsocketInitFunc
 	connectionKeepAlivePingInterval time.Duration
 	recover                         graphql.RecoverFunc
@@ -93,7 +94,7 @@ type Config struct {
 type Option func(cfg *Config)
 
 // Deprecated: switch to graphql/handler.New
-func WebsocketUpgrader(upgrader websocket.Upgrader) Option {
+func WebsocketUpgrader(upgrader websocket.FastHTTPUpgrader) Option {
 	return func(cfg *Config) {
 		cfg.upgrader = upgrader
 	}
