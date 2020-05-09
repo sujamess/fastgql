@@ -1,9 +1,10 @@
 package graphql
 
 import (
-	"context"
 	"fmt"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 type Stats struct {
@@ -28,14 +29,14 @@ var ctxTraceStart key = "trace_start"
 // context but we want to grab it as soon as possible. For transports that can only handle a single graphql query
 // per http requests you dont need to call this at all, the server will do it for you. For transports that handle
 // multiple (eg batching, subscriptions) this should be called before decoding each request.
-func StartOperationTrace(ctx context.Context) context.Context {
-	return context.WithValue(ctx, ctxTraceStart, Now())
+func StartOperationTrace(ctx *fasthttp.RequestCtx) {
+	ctx.SetUserValue(string(ctxTraceStart), Now())
 }
 
 // GetStartTime should only be called by the handler package, it will be set into request context
 // as Stats.Start
-func GetStartTime(ctx context.Context) time.Time {
-	t, ok := ctx.Value(ctxTraceStart).(time.Time)
+func GetStartTime(ctx *fasthttp.RequestCtx) time.Time {
+	t, ok := ctx.UserValue(string(ctxTraceStart)).(time.Time)
 	if !ok {
 		panic(fmt.Sprintf("missing start time: %T", ctx.Value(ctxTraceStart)))
 	}

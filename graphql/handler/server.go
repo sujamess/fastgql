@@ -106,7 +106,7 @@ func (s *Server) Handler() fasthttp.RequestHandler {
 			}
 		}()
 
-		// r = r.WithContext(graphql.StartOperationTrace(ctx))
+		graphql.StartOperationTrace(ctx)
 
 		transport := s.getTransport(ctx)
 		if transport == nil {
