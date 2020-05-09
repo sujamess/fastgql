@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -240,7 +239,7 @@ type PersistedQueryCache interface {
 }
 
 // Deprecated: use playground.Handler instead
-func Playground(title string, endpoint string) http.HandlerFunc {
+func Playground(title string, endpoint string) fasthttp.RequestHandler {
 	return playground.Handler(title, endpoint)
 }
 
