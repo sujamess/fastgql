@@ -12,6 +12,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
@@ -84,48 +85,50 @@ func (s *Server) AroundResponses(f graphql.ResponseMiddleware) {
 	s.exec.AroundResponses(f)
 }
 
-func (s *Server) getTransport(r *http.Request) graphql.Transport {
+func (s *Server) getTransport(ctx *fasthttp.RequestCtx) graphql.Transport {
 	for _, t := range s.transports {
-		if t.Supports(r) {
+		if t.Supports(ctx) {
 			return t
 		}
 	}
 	return nil
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			err := s.exec.PresentRecoveredError(r.Context(), err)
-			resp := &graphql.Response{Errors: []*gqlerror.Error{err}}
-			b, _ := json.Marshal(resp)
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			w.Write(b)
+func (s *Server) ServeHTTP() func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
+		defer func() {
+			if err := recover(); err != nil {
+				err := s.exec.PresentRecoveredError(ctx, err)
+				resp := &graphql.Response{Errors: []*gqlerror.Error{err}}
+				b, _ := json.Marshal(resp)
+				ctx.Response.Header.SetStatusCode(fasthttp.StatusUnprocessableEntity)
+				ctx.Write(b)
+			}
+		}()
+
+		// r = r.WithContext(graphql.StartOperationTrace(ctx))
+
+		transport := s.getTransport(ctx)
+		if transport == nil {
+			sendErrorf(ctx, http.StatusBadRequest, "transport not supported")
+			return
 		}
-	}()
 
-	r = r.WithContext(graphql.StartOperationTrace(r.Context()))
-
-	transport := s.getTransport(r)
-	if transport == nil {
-		sendErrorf(w, http.StatusBadRequest, "transport not supported")
-		return
+		transport.Do(ctx, s.exec)
 	}
-
-	transport.Do(w, r, s.exec)
 }
 
-func sendError(w http.ResponseWriter, code int, errors ...*gqlerror.Error) {
-	w.WriteHeader(code)
+func sendError(ctx *fasthttp.RequestCtx, code int, errors ...*gqlerror.Error) {
+	ctx.Response.SetStatusCode(code)
 	b, err := json.Marshal(&graphql.Response{Errors: errors})
 	if err != nil {
 		panic(err)
 	}
-	w.Write(b)
+	ctx.Write(b)
 }
 
-func sendErrorf(w http.ResponseWriter, code int, format string, args ...interface{}) {
-	sendError(w, code, &gqlerror.Error{Message: fmt.Sprintf(format, args...)})
+func sendErrorf(ctx *fasthttp.RequestCtx, code int, format string, args ...interface{}) {
+	sendError(ctx, code, &gqlerror.Error{Message: fmt.Sprintf(format, args...)})
 }
 
 type OperationFunc func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler
