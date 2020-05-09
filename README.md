@@ -24,6 +24,8 @@ package main
 import (
   "github.com/gofiber/fiber"
   "github.com/arsmn/gqlgen"
+  "<Your go module>/gql"
+	"<Your go module>/generated"
   "github.com/arsmn/gqlgen/graphql/handler"
 	"github.com/arsmn/gqlgen/graphql/playground"
 )
@@ -31,6 +33,7 @@ import (
 func main() {
   app := fiber.New()
 
+  srv := handler.NewDefaultServer(generated.NewExecutableSchema(gql.NewResolver()))
 	serverHandler := srv.Handler()
   playgroundHandler := playground.Handler("GraphQL playground", "/query")
 
