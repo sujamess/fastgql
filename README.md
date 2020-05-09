@@ -34,7 +34,7 @@ func main() {
 	serverHandler := srv.Handler()
   playgroundHandler := playground.Handler("GraphQL playground", "/query")
 
-  app.Get("/query", func(c *fiber.Ctx){
+  app.Use("/query", func(c *fiber.Ctx){
     serverHandler(c.Fasthttp)
   })
 
