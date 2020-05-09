@@ -2,10 +2,10 @@ package graphql
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
@@ -83,8 +83,8 @@ type (
 
 	// Transport provides support for different wire level encodings of graphql requests, eg Form, Get, Post, Websocket
 	Transport interface {
-		Supports(r *http.Request) bool
-		Do(w http.ResponseWriter, r *http.Request, exec GraphExecutor)
+		Supports(ctx *fasthttp.RequestCtx) bool
+		Do(ctx *fasthttp.RequestCtx, exec GraphExecutor)
 	}
 )
 

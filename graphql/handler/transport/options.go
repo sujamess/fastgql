@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/valyala/fasthttp"
 )
 
 // Options responds to http OPTIONS and HEAD requests
@@ -11,16 +12,17 @@ type Options struct{}
 
 var _ graphql.Transport = Options{}
 
-func (o Options) Supports(r *http.Request) bool {
-	return r.Method == "HEAD" || r.Method == "OPTIONS"
+func (o Options) Supports(ctx *fasthttp.RequestCtx) bool {
+	method := string(ctx.Method())
+	return method == "HEAD" || method == "OPTIONS"
 }
 
-func (o Options) Do(w http.ResponseWriter, r *http.Request, exec graphql.GraphExecutor) {
-	switch r.Method {
-	case http.MethodOptions:
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Allow", "OPTIONS, GET, POST")
+func (o Options) Do(ctx *fasthttp.RequestCtx, exec graphql.GraphExecutor) {
+	switch string(ctx.Method()) {
+	case fasthttp.MethodOptions:
+		ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
+		ctx.Response.Header.Set("Allow", "OPTIONS, GET, POST")
 	case http.MethodHead:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		ctx.Response.Header.SetStatusCode(fasthttp.StatusMethodNotAllowed)
 	}
 }

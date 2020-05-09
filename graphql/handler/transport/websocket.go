@@ -12,7 +12,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/errcode"
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
@@ -31,7 +32,7 @@ const (
 
 type (
 	Websocket struct {
-		Upgrader              websocket.Upgrader
+		Upgrader              websocket.FastHTTPUpgrader
 		InitFunc              WebsocketInitFunc
 		KeepAlivePingInterval time.Duration
 	}
@@ -56,33 +57,31 @@ type (
 
 var _ graphql.Transport = Websocket{}
 
-func (t Websocket) Supports(r *http.Request) bool {
-	return r.Header.Get("Upgrade") != ""
+func (t Websocket) Supports(ctx *fasthttp.RequestCtx) bool {
+	return string(ctx.Request.Header.Peek("Upgrade")) != ""
 }
 
-func (t Websocket) Do(w http.ResponseWriter, r *http.Request, exec graphql.GraphExecutor) {
-	ws, err := t.Upgrader.Upgrade(w, r, http.Header{
-		"Sec-Websocket-Protocol": []string{"graphql-ws"},
+func (t Websocket) Do(ctx *fasthttp.RequestCtx, exec graphql.GraphExecutor) {
+	err := t.Upgrader.Upgrade(ctx, func(ws *websocket.Conn) {
+		conn := wsConnection{
+			active:    map[string]context.CancelFunc{},
+			conn:      ws,
+			ctx:       ctx,
+			exec:      exec,
+			Websocket: t,
+		}
+
+		if !conn.init() {
+			return
+		}
+
+		conn.run()
 	})
 	if err != nil {
-		log.Printf("unable to upgrade %T to websocket %s: ", w, err.Error())
-		SendErrorf(w, http.StatusBadRequest, "unable to upgrade")
+		log.Printf("unable to upgrade %T to websocket %s: ", ctx, err.Error())
+		SendErrorf(ctx, http.StatusBadRequest, "unable to upgrade")
 		return
 	}
-
-	conn := wsConnection{
-		active:    map[string]context.CancelFunc{},
-		conn:      ws,
-		ctx:       r.Context(),
-		exec:      exec,
-		Websocket: t,
-	}
-
-	if !conn.init() {
-		return
-	}
-
-	conn.run()
 }
 
 func (c *wsConnection) init() bool {

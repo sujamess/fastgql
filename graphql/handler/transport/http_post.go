@@ -1,10 +1,11 @@
 package transport
 
 import (
+	"bytes"
 	"mime"
-	"net/http"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/valyala/fasthttp"
 )
 
 // POST implements the POST side of the default HTTP transport
@@ -13,27 +14,27 @@ type POST struct{}
 
 var _ graphql.Transport = POST{}
 
-func (h POST) Supports(r *http.Request) bool {
-	if r.Header.Get("Upgrade") != "" {
+func (h POST) Supports(ctx *fasthttp.RequestCtx) bool {
+	if string(ctx.Request.Header.Peek("Upgrade")) != "" {
 		return false
 	}
 
-	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	mediaType, _, err := mime.ParseMediaType(string(ctx.Request.Header.ContentType()))
 	if err != nil {
 		return false
 	}
 
-	return r.Method == "POST" && mediaType == "application/json"
+	return string(ctx.Method()) == "POST" && mediaType == "application/json"
 }
 
-func (h POST) Do(w http.ResponseWriter, r *http.Request, exec graphql.GraphExecutor) {
-	w.Header().Set("Content-Type", "application/json")
+func (h POST) Do(ctx *fasthttp.RequestCtx, exec graphql.GraphExecutor) {
+	ctx.Response.Header.SetContentType("application/json")
 
 	var params *graphql.RawParams
 	start := graphql.Now()
-	if err := jsonDecode(r.Body, &params); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJsonErrorf(w, "json body could not be decoded: "+err.Error())
+	if err := jsonDecode(bytes.NewReader(ctx.Request.Body()), &params); err != nil {
+		ctx.Response.Header.SetStatusCode(fasthttp.StatusBadRequest)
+		writeJsonErrorf(ctx, "json body could not be decoded: "+err.Error())
 		return
 	}
 	params.ReadTime = graphql.TraceTiming{
@@ -41,13 +42,13 @@ func (h POST) Do(w http.ResponseWriter, r *http.Request, exec graphql.GraphExecu
 		End:   graphql.Now(),
 	}
 
-	rc, err := exec.CreateOperationContext(r.Context(), params)
+	rc, err := exec.CreateOperationContext(ctx, params)
 	if err != nil {
-		w.WriteHeader(statusFor(err))
-		resp := exec.DispatchError(graphql.WithOperationContext(r.Context(), rc), err)
-		writeJson(w, resp)
+		ctx.Response.Header.SetStatusCode(statusFor(err))
+		resp := exec.DispatchError(graphql.WithOperationContext(ctx, rc), err)
+		writeJson(ctx, resp)
 		return
 	}
-	responses, ctx := exec.DispatchOperation(r.Context(), rc)
-	writeJson(w, responses(ctx))
+	responses, c := exec.DispatchOperation(ctx, rc)
+	writeJson(ctx, responses(c))
 }

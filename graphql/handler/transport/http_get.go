@@ -3,11 +3,11 @@ package transport
 import (
 	"encoding/json"
 	"io"
-	"net/http"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/errcode"
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
@@ -18,55 +18,55 @@ type GET struct{}
 
 var _ graphql.Transport = GET{}
 
-func (h GET) Supports(r *http.Request) bool {
-	if r.Header.Get("Upgrade") != "" {
+func (h GET) Supports(ctx *fasthttp.RequestCtx) bool {
+	if string(ctx.Request.Header.Peek("Upgrade")) != "" {
 		return false
 	}
 
-	return r.Method == "GET"
+	return string(ctx.Method()) == fasthttp.MethodGet
 }
 
-func (h GET) Do(w http.ResponseWriter, r *http.Request, exec graphql.GraphExecutor) {
+func (h GET) Do(ctx *fasthttp.RequestCtx, exec graphql.GraphExecutor) {
 	raw := &graphql.RawParams{
-		Query:         r.URL.Query().Get("query"),
-		OperationName: r.URL.Query().Get("operationName"),
+		Query:         string(ctx.QueryArgs().Peek("query")),
+		OperationName: string(ctx.QueryArgs().Peek("operationName")),
 	}
 	raw.ReadTime.Start = graphql.Now()
 
-	if variables := r.URL.Query().Get("variables"); variables != "" {
+	if variables := string(ctx.QueryArgs().Peek("variables")); variables != "" {
 		if err := jsonDecode(strings.NewReader(variables), &raw.Variables); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			writeJsonError(w, "variables could not be decoded")
+			ctx.Response.Header.SetStatusCode(fasthttp.StatusBadRequest)
+			writeJsonError(ctx, "variables could not be decoded")
 			return
 		}
 	}
 
-	if extensions := r.URL.Query().Get("extensions"); extensions != "" {
+	if extensions := string(ctx.QueryArgs().Peek("extensions")); extensions != "" {
 		if err := jsonDecode(strings.NewReader(extensions), &raw.Extensions); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			writeJsonError(w, "extensions could not be decoded")
+			ctx.Response.Header.SetStatusCode(fasthttp.StatusBadRequest)
+			writeJsonError(ctx, "extensions could not be decoded")
 			return
 		}
 	}
 
 	raw.ReadTime.End = graphql.Now()
 
-	rc, err := exec.CreateOperationContext(r.Context(), raw)
+	rc, err := exec.CreateOperationContext(ctx, raw)
 	if err != nil {
-		w.WriteHeader(statusFor(err))
-		resp := exec.DispatchError(graphql.WithOperationContext(r.Context(), rc), err)
-		writeJson(w, resp)
+		ctx.Response.Header.SetStatusCode(statusFor(err))
+		resp := exec.DispatchError(graphql.WithOperationContext(ctx, rc), err)
+		writeJson(ctx, resp)
 		return
 	}
 	op := rc.Doc.Operations.ForName(rc.OperationName)
 	if op.Operation != ast.Query {
-		w.WriteHeader(http.StatusNotAcceptable)
-		writeJsonError(w, "GET requests only allow query operations")
+		ctx.Response.Header.SetStatusCode(fasthttp.StatusNotAcceptable)
+		writeJsonError(ctx, "GET requests only allow query operations")
 		return
 	}
 
-	responses, ctx := exec.DispatchOperation(r.Context(), rc)
-	writeJson(w, responses(ctx))
+	responses, c := exec.DispatchOperation(ctx, rc)
+	writeJson(ctx, responses(c))
 }
 
 func jsonDecode(r io.Reader, val interface{}) error {
@@ -78,8 +78,8 @@ func jsonDecode(r io.Reader, val interface{}) error {
 func statusFor(errs gqlerror.List) int {
 	switch errcode.GetErrorKind(errs) {
 	case errcode.KindProtocol:
-		return http.StatusUnprocessableEntity
+		return fasthttp.StatusUnprocessableEntity
 	default:
-		return http.StatusOK
+		return fasthttp.StatusOK
 	}
 }
