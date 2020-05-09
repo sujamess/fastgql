@@ -1,6 +1,10 @@
 package transport
 
-import "context"
+import (
+	"context"
+
+	"github.com/valyala/fasthttp"
+)
 
 type key string
 
@@ -41,14 +45,14 @@ func (p InitPayload) Authorization() string {
 	return ""
 }
 
-func withInitPayload(ctx context.Context, payload InitPayload) context.Context {
-	return context.WithValue(ctx, initpayload, payload)
+func withInitPayload(ctx *fasthttp.RequestCtx, payload InitPayload) {
+	ctx.SetUserValue(string(initpayload), payload)
 }
 
 // GetInitPayload gets a map of the data sent with the connection_init message, which is used by
 // graphql clients as a stand-in for HTTP headers.
 func GetInitPayload(ctx context.Context) InitPayload {
-	payload, ok := ctx.Value(initpayload).(InitPayload)
+	payload, ok := ctx.Value(string(initpayload)).(InitPayload)
 	if !ok {
 		return nil
 	}

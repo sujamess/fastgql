@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -35,8 +36,8 @@ func StartOperationTrace(ctx *fasthttp.RequestCtx) {
 
 // GetStartTime should only be called by the handler package, it will be set into request context
 // as Stats.Start
-func GetStartTime(ctx *fasthttp.RequestCtx) time.Time {
-	t, ok := ctx.UserValue(string(ctxTraceStart)).(time.Time)
+func GetStartTime(ctx context.Context) time.Time {
+	t, ok := ctx.Value(string(ctxTraceStart)).(time.Time)
 	if !ok {
 		panic(fmt.Sprintf("missing start time: %T", ctx.Value(ctxTraceStart)))
 	}

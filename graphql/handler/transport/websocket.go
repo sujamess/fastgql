@@ -38,7 +38,7 @@ type (
 	}
 	wsConnection struct {
 		Websocket
-		ctx             context.Context
+		ctx             *fasthttp.RequestCtx
 		conn            *websocket.Conn
 		active          map[string]context.CancelFunc
 		mu              sync.Mutex
@@ -52,7 +52,7 @@ type (
 		ID      string          `json:"id,omitempty"`
 		Type    string          `json:"type"`
 	}
-	WebsocketInitFunc func(ctx context.Context, initPayload InitPayload) (context.Context, error)
+	WebsocketInitFunc func(ctx *fasthttp.RequestCtx, initPayload InitPayload) (*fasthttp.RequestCtx, error)
 )
 
 var _ graphql.Transport = Websocket{}
@@ -187,7 +187,7 @@ func (c *wsConnection) keepAlive(ctx context.Context) {
 }
 
 func (c *wsConnection) subscribe(start time.Time, message *operationMessage) {
-	ctx := graphql.StartOperationTrace(c.ctx)
+	graphql.StartOperationTrace(c.ctx)
 	var params *graphql.RawParams
 	if err := jsonDecode(bytes.NewReader(message.Payload), &params); err != nil {
 		c.sendError(message.ID, &gqlerror.Error{Message: "invalid json"})
@@ -200,9 +200,9 @@ func (c *wsConnection) subscribe(start time.Time, message *operationMessage) {
 		End:   graphql.Now(),
 	}
 
-	rc, err := c.exec.CreateOperationContext(ctx, params)
+	rc, err := c.exec.CreateOperationContext(c.ctx, params)
 	if err != nil {
-		resp := c.exec.DispatchError(graphql.WithOperationContext(ctx, rc), err)
+		resp := c.exec.DispatchError(graphql.WithOperationContext(c.ctx, rc), err)
 		switch errcode.GetErrorKind(err) {
 		case errcode.KindProtocol:
 			c.sendError(message.ID, resp.Errors...)
@@ -214,13 +214,13 @@ func (c *wsConnection) subscribe(start time.Time, message *operationMessage) {
 		return
 	}
 
-	ctx = graphql.WithOperationContext(ctx, rc)
+	graphql.WithOperationContext(c.ctx, rc)
 
 	if c.initPayload != nil {
-		ctx = withInitPayload(ctx, c.initPayload)
+		withInitPayload(c.ctx, c.initPayload)
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(c.ctx)
 	c.mu.Lock()
 	c.active[message.ID] = cancel
 	c.mu.Unlock()

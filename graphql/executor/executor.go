@@ -47,7 +47,7 @@ func (e *Executor) CreateOperationContext(ctx context.Context, params *graphql.R
 			OperationStart: graphql.GetStartTime(ctx),
 		},
 	}
-	ctx = graphql.WithOperationContext(ctx, rc)
+	graphql.WithOperationContext(ctx, rc)
 
 	for _, p := range e.ext.operationParameterMutators {
 		if err := p.MutateOperationParameters(ctx, params); err != nil {
