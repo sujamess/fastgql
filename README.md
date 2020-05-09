@@ -1,4 +1,4 @@
-# gqlgen [![Continuous Integration](https://github.com/99designs/gqlgen/workflows/Continuous%20Integration/badge.svg)](https://github.com/99designs/gqlgen/actions) [![Read the Docs](https://badgen.net/badge/docs/available/green)](http://gqlgen.com/) [![GoDoc](https://godoc.org/github.com/99designs/gqlgen?status.svg)](https://godoc.org/github.com/99designs/gqlgen)
+# gqlgen with fasthttp
 
 ## What is gqlgen?
 
@@ -14,7 +14,37 @@
 
 First work your way through the [Getting Started](https://gqlgen.com/getting-started/) tutorial.
 
-If you can't find what your looking for, look at our [examples](https://github.com/99designs/gqlgen/tree/master/example) for example usage of gqlgen, or visit [godoc](https://godoc.org/github.com/99designs/gqlgen).
+If you can't find what your looking for, look at our [examples](https://github.com/arsmn/gqlgen/tree/master/example) for example usage of gqlgen, or visit [godoc](https://godoc.org/github.com/arsmn/gqlgen).
+
+## Using with Fiber
+
+```go
+package main
+
+import (
+  "github.com/gofiber/fiber"
+  "github.com/arsmn/gqlgen"
+  "github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+)
+
+func main() {
+  app := fiber.New()
+
+	serverHandler := srv.Handler()
+  playgroundHandler := playground.Handler("GraphQL playground", "/query")
+
+  app.Get("/query", func(c *fiber.Ctx){
+    serverHandler(c.Fasthttp)
+  })
+
+  app.Use("/playground", func(c *fiber.Ctx){
+    playgroundHandler(c.Fasthttp)
+  })
+
+  app.Listen(8080)
+}
+```
 
 ## Reporting Issues
 
