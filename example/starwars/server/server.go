@@ -25,12 +25,12 @@ func main() {
 	serverHandler := srv.Handler()
 	playgroundHandler := playground.Handler("GraphQL playground", "/query")
 
-	app.Use("/", func(c *fiber.Ctx) {
-		playgroundHandler(c.Fasthttp)
-	})
-
 	app.Use("/query", func(c *fiber.Ctx) {
 		serverHandler(c.Fasthttp)
+	})
+
+	app.Use("/", func(c *fiber.Ctx) {
+		playgroundHandler(c.Fasthttp)
 	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
