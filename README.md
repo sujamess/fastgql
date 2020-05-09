@@ -24,8 +24,8 @@ package main
 import (
   "github.com/gofiber/fiber"
   "github.com/arsmn/gqlgen"
-  "github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
+  "github.com/arsmn/gqlgen/graphql/handler"
+	"github.com/arsmn/gqlgen/graphql/playground"
 )
 
 func main() {
