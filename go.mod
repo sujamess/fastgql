@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/agnivade/levenshtein v1.0.3 // indirect
+	github.com/fasthttp/websocket v1.4.2
 	github.com/go-chi/chi v3.3.2+incompatible
 	github.com/gogo/protobuf v1.0.0 // indirect
 	github.com/gorilla/context v0.0.0-20160226214623-1ea25387ff6f // indirect
@@ -23,11 +24,11 @@ require (
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/cli/v2 v2.1.1
+	github.com/valyala/fasthttp v1.12.0
 	github.com/vektah/dataloaden v0.2.1-0.20190515034641-a19b9a6e7c9e
 	github.com/vektah/gqlparser/v2 v2.0.1
 	golang.org/x/tools v0.0.0-20200114235610-7ae403b6b589
 	gopkg.in/yaml.v2 v2.2.4
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20180110180208-2cc67fd64755
 	sourcegraph.com/sourcegraph/appdash-data v0.0.0-20151005221446-73f23eafcf67 // indirect
-	github.com/valyala/fasthttp v1.12.0
 )
