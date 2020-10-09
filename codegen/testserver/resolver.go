@@ -7,6 +7,7 @@ import (
 
 	introspection1 "github.com/99designs/gqlgen/codegen/testserver/introspection"
 	invalid_packagename "github.com/99designs/gqlgen/codegen/testserver/invalid-packagename"
+	"github.com/99designs/gqlgen/codegen/testserver/otherpkg"
 )
 
 type Resolver struct{}
@@ -40,6 +41,10 @@ func (r *forcedResolverResolver) Field(ctx context.Context, obj *ForcedResolver)
 }
 
 func (r *modelMethodsResolver) ResolverField(ctx context.Context, obj *ModelMethods) (bool, error) {
+	panic("not implemented")
+}
+
+func (r *mutationResolver) UpdateSomething(ctx context.Context, input SpecialInput) (string, error) {
 	panic("not implemented")
 }
 
@@ -104,6 +109,10 @@ func (r *queryResolver) NullableArg(ctx context.Context, arg *int) (*string, err
 }
 
 func (r *queryResolver) InputSlice(ctx context.Context, arg []string) (bool, error) {
+	panic("not implemented")
+}
+
+func (r *queryResolver) InputNullableSlice(ctx context.Context, arg []string) (bool, error) {
 	panic("not implemented")
 }
 
@@ -271,7 +280,15 @@ func (r *queryResolver) WrappedStruct(ctx context.Context) (*WrappedStruct, erro
 	panic("not implemented")
 }
 
-func (r *queryResolver) WrappedScalar(ctx context.Context) (WrappedScalar, error) {
+func (r *queryResolver) WrappedScalar(ctx context.Context) (otherpkg.Scalar, error) {
+	panic("not implemented")
+}
+
+func (r *queryResolver) WrappedMap(ctx context.Context) (WrappedMap, error) {
+	panic("not implemented")
+}
+
+func (r *queryResolver) WrappedSlice(ctx context.Context) (WrappedSlice, error) {
 	panic("not implemented")
 }
 
@@ -307,8 +324,18 @@ func (r *userResolver) Friends(ctx context.Context, obj *User) ([]*User, error) 
 	panic("not implemented")
 }
 
+func (r *wrappedMapResolver) Get(ctx context.Context, obj WrappedMap, key string) (string, error) {
+	panic("not implemented")
+}
+
+func (r *wrappedSliceResolver) Get(ctx context.Context, obj WrappedSlice, idx int) (string, error) {
+	panic("not implemented")
+}
+
 // BackedByInterface returns BackedByInterfaceResolver implementation.
-func (r *Resolver) BackedByInterface() BackedByInterfaceResolver { return &backedByInterfaceResolver{r} }
+func (r *Resolver) BackedByInterface() BackedByInterfaceResolver {
+	return &backedByInterfaceResolver{r}
+}
 
 // Errors returns ErrorsResolver implementation.
 func (r *Resolver) Errors() ErrorsResolver { return &errorsResolver{r} }
@@ -319,8 +346,13 @@ func (r *Resolver) ForcedResolver() ForcedResolverResolver { return &forcedResol
 // ModelMethods returns ModelMethodsResolver implementation.
 func (r *Resolver) ModelMethods() ModelMethodsResolver { return &modelMethodsResolver{r} }
 
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
 // OverlappingFields returns OverlappingFieldsResolver implementation.
-func (r *Resolver) OverlappingFields() OverlappingFieldsResolver { return &overlappingFieldsResolver{r} }
+func (r *Resolver) OverlappingFields() OverlappingFieldsResolver {
+	return &overlappingFieldsResolver{r}
+}
 
 // Panics returns PanicsResolver implementation.
 func (r *Resolver) Panics() PanicsResolver { return &panicsResolver{r} }
@@ -340,10 +372,17 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 // User returns UserResolver implementation.
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
+// WrappedMap returns WrappedMapResolver implementation.
+func (r *Resolver) WrappedMap() WrappedMapResolver { return &wrappedMapResolver{r} }
+
+// WrappedSlice returns WrappedSliceResolver implementation.
+func (r *Resolver) WrappedSlice() WrappedSliceResolver { return &wrappedSliceResolver{r} }
+
 type backedByInterfaceResolver struct{ *Resolver }
 type errorsResolver struct{ *Resolver }
 type forcedResolverResolver struct{ *Resolver }
 type modelMethodsResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
 type overlappingFieldsResolver struct{ *Resolver }
 type panicsResolver struct{ *Resolver }
 type primitiveResolver struct{ *Resolver }
@@ -351,3 +390,5 @@ type primitiveStringResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+type wrappedMapResolver struct{ *Resolver }
+type wrappedSliceResolver struct{ *Resolver }

@@ -16,6 +16,7 @@ func (ec *executionContext) _{{$object.Name}}_{{$field.Name}}(ctx context.Contex
 		Field: field,
 		Args:  nil,
 		IsMethod: {{or $field.IsMethod $field.IsResolver}},
+		IsResolver: {{ $field.IsResolver }},
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
@@ -81,7 +82,7 @@ func (ec *executionContext) _{{$object.Name}}_{{$field.Name}}(ctx context.Contex
 		{{ template "implDirectives" . }}
 		tmp, err := directive{{.ImplDirectives|len}}(rctx)
 		if err != nil {
-			return nil, err
+			return nil, graphql.ErrorOnPath(ctx, err)
 		}
 		if tmp == nil {
 		    return nil, nil
