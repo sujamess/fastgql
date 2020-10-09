@@ -49,7 +49,8 @@ func (h POST) Do(ctx *fasthttp.RequestCtx, exec graphql.GraphExecutor) {
 		writeJson(ctx, resp)
 		return
 	}
-	ctx := graphql.WithOperationContext(ctx, rc)
-	responses, ctx := exec.DispatchOperation(ctx, rc)
-	writeJson(w, responses(ctx))
+
+	graphql.WithOperationContext(ctx, rc)
+	responses, c := exec.DispatchOperation(ctx, rc)
+	writeJson(ctx, responses(c))
 }

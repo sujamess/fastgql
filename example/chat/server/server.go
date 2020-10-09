@@ -8,14 +8,15 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/gofiber/fiber/v2"
+	"github.com/valyala/fasthttp"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 
 	"github.com/99designs/gqlgen/example/chat"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
 	"github.com/opentracing/opentracing-go"
-	"github.com/rs/cors"
 	"sourcegraph.com/sourcegraph/appdash"
 	appdashtracer "sourcegraph.com/sourcegraph/appdash/opentracing"
 	"sourcegraph.com/sourcegraph/appdash/traceapp"
@@ -24,28 +25,39 @@ import (
 func main() {
 	startAppdashServer()
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
-		AllowCredentials: true,
-	})
+	// c := cors.New(cors.Options{
+	// 	AllowedOrigins:   []string{"http://localhost:3000"},
+	// 	AllowCredentials: true,
+	// })
 
 	srv := handler.New(chat.NewExecutableSchema(chat.New()))
 
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.Websocket{
-		KeepAlivePingInterval: 10 * time.Second,
-		Upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
+		KeepAlivePingInterval: 2 * time.Second,
+		Upgrader: websocket.FastHTTPUpgrader{
+			CheckOrigin: func(ctx *fasthttp.RequestCtx) bool {
 				return true
 			},
 		},
 	})
 	srv.Use(extension.Introspection{})
 
-	http.Handle("/", playground.Handler("Todo", "/query"))
-	http.Handle("/query", c.Handler(srv))
+	app := fiber.New()
+	playground := playground.Handler("Todo", "/query")
+	gqlHandler := srv.Handler()
 
-	log.Fatal(http.ListenAndServe(":8085", nil))
+	app.All("/query", func(c *fiber.Ctx) error {
+		gqlHandler(c.Context())
+		return nil
+	})
+
+	app.All("/", func(c *fiber.Ctx) error {
+		playground(c.Context())
+		return nil
+	})
+
+	log.Fatal(app.Listen(":8081"))
 }
 
 func startAppdashServer() opentracing.Tracer {

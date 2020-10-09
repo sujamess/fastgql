@@ -5,10 +5,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
-	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/gofiber/fiber/v2"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 
@@ -19,7 +19,9 @@ import (
 )
 
 func main() {
-	http.Handle("/", playground.Handler("File Upload Demo", "/query"))
+	app := fiber.New()
+	playground := playground.Handler("File Upload Demo", "/query")
+
 	resolver := getResolver()
 
 	var mb int64 = 1 << 20
@@ -32,9 +34,19 @@ func main() {
 	})
 	srv.Use(extension.Introspection{})
 
-	http.Handle("/query", srv)
+	gqlHandler := srv.Handler()
+	app.All("/query", func(c *fiber.Ctx) error {
+		gqlHandler(c.Context())
+		return nil
+	})
+
+	app.All("/", func(c *fiber.Ctx) error {
+		playground(c.Context())
+		return nil
+	})
+
 	log.Print("connect to http://localhost:8087/ for GraphQL playground")
-	log.Fatal(http.ListenAndServe(":8087", nil))
+	log.Fatal(app.Listen(":8087"))
 }
 
 func getResolver() *fileupload.Stub {

@@ -8,10 +8,10 @@ import (
 	"github.com/99designs/gqlgen/example/starwars/generated"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
-const defaultPort = "8080"
+const defaultPort = ":8080"
 
 func main() {
 	port := os.Getenv("PORT")
@@ -25,15 +25,17 @@ func main() {
 	serverHandler := srv.Handler()
 	playgroundHandler := playground.Handler("GraphQL playground", "/query")
 
-	app.Use("/query", func(c *fiber.Ctx) {
-		serverHandler(c.Fasthttp)
+	app.All("/query", func(c *fiber.Ctx) error {
+		serverHandler(c.Context())
+		return nil
 	})
 
-	app.Use("/", func(c *fiber.Ctx) {
-		playgroundHandler(c.Fasthttp)
+	app.All("/", func(c *fiber.Ctx) error {
+		playgroundHandler(c.Context())
+		return nil
 	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 
-	app.Listen(defaultPort)
+	log.Fatal(app.Listen(defaultPort))
 }

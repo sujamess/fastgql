@@ -2,16 +2,27 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/99designs/gqlgen/example/scalars"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	http.Handle("/", playground.Handler("Starwars", "/query"))
-	http.Handle("/query", handler.NewDefaultServer(scalars.NewExecutableSchema(scalars.Config{Resolvers: &scalars.Resolver{}})))
+	app := fiber.New()
+	playground := playground.Handler("Starwars", "/query")
+	gqlHandler := handler.NewDefaultServer(scalars.NewExecutableSchema(scalars.Config{Resolvers: &scalars.Resolver{}})).Handler()
 
-	log.Fatal(http.ListenAndServe(":8084", nil))
+	app.All("/query", func(c *fiber.Ctx) error {
+		gqlHandler(c.Context())
+		return nil
+	})
+
+	app.All("/", func(c *fiber.Ctx) error {
+		playground(c.Context())
+		return nil
+	})
+
+	log.Fatal(app.Listen(":8084"))
 }

@@ -3,7 +3,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/example/federation/accounts/graph"
@@ -11,6 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/debug"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gofiber/fiber/v2"
 )
 
 const defaultPort = "4001"
@@ -21,12 +21,23 @@ func main() {
 		port = defaultPort
 	}
 
+	app := fiber.New()
+	playground := playground.Handler("GraphQL playground", "/query")
+
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 	srv.Use(&debug.Tracer{})
+	gqlHandler := srv.Handler()
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	app.All("/query", func(c *fiber.Ctx) error {
+		gqlHandler(c.Context())
+		return nil
+	})
+
+	app.All("/", func(c *fiber.Ctx) error {
+		playground(c.Context())
+		return nil
+	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(app.Listen(":" + port))
 }

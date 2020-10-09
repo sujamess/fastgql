@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
 )
 
 const (
