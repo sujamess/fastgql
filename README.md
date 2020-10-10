@@ -30,7 +30,7 @@ import (
   "github.com/valyala/fasthttp"
   "github.com/arsmn/gqlgen"
   "<Your go module>/gql"
-	"<Your go module>/generated"
+  "<Your go module>/generated"
   "github.com/arsmn/gqlgen/graphql/handler"
 	"github.com/arsmn/gqlgen/graphql/playground"
 )
@@ -64,7 +64,7 @@ import (
   "github.com/gofiber/fiber/v2"
   "github.com/arsmn/gqlgen"
   "<Your go module>/gql"
-	"<Your go module>/generated"
+  "<Your go module>/generated"
   "github.com/arsmn/gqlgen/graphql/handler"
 	"github.com/arsmn/gqlgen/graphql/playground"
 )
@@ -76,12 +76,12 @@ func main() {
 	serverHandler := srv.Handler()
   playgroundHandler := playground.Handler("GraphQL playground", "/query")
 
-  app.Use("/query", func(c *fiber.Ctx) error {
+  app.All("/query", func(c *fiber.Ctx) error {
     serverHandler(c.Context())
     return nil
   })
 
-  app.Use("/playground", func(c *fiber.Ctx) error {
+  app.All("/playground", func(c *fiber.Ctx) error {
     playgroundHandler(c.Context())
     return nil
   })
