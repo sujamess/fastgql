@@ -14,6 +14,7 @@ Still not convinced enough to use **gqlgen**? Compare **gqlgen** with other Go g
 
 ## Getting Started
 - To install gqlgen run the command `go get github.com/99designs/gqlgen` in your project directory.<br/> 
+- Add this line to your go mod file `replace github.com/99designs/gqlgen v0.13.0 => github.com/arsmn/gqlgen v0.13.2`
 - You could initialize a new project using the recommended folder structure by running this command `go run github.com/99designs/gqlgen init`.
 
 First work your way through the [Getting Started](https://gqlgen.com/getting-started/) tutorial.
