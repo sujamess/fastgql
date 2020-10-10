@@ -20,13 +20,48 @@ First work your way through the [Getting Started](https://gqlgen.com/getting-sta
 
 If you can't find what your looking for, look at our [examples](https://github.com/arsmn/gqlgen/tree/master/example) for example usage of gqlgen, or visit [godoc](https://godoc.org/github.com/arsmn/gqlgen).
 
+## Using with Fasthttp
+
+```go
+package main
+
+import (
+  "log"
+  "github.com/valyala/fasthttp"
+  "github.com/arsmn/gqlgen"
+  "<Your go module>/gql"
+	"<Your go module>/generated"
+  "github.com/arsmn/gqlgen/graphql/handler"
+	"github.com/arsmn/gqlgen/graphql/playground"
+)
+
+func main() {
+	playground := playground.Handler("GraphQL playground", "/query")
+	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(gql.NewResolver())).Handler()
+
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
+
+  log.Fatal(fasthttp.ListenAndServe(":8080", h))
+}
+```
+
 ## Using with Fiber
 
 ```go
 package main
 
 import (
-  "github.com/gofiber/fiber"
+  "log"
+  "github.com/gofiber/fiber/v2"
   "github.com/arsmn/gqlgen"
   "<Your go module>/gql"
 	"<Your go module>/generated"
@@ -41,15 +76,17 @@ func main() {
 	serverHandler := srv.Handler()
   playgroundHandler := playground.Handler("GraphQL playground", "/query")
 
-  app.Use("/query", func(c *fiber.Ctx){
-    serverHandler(c.Fasthttp)
+  app.Use("/query", func(c *fiber.Ctx) error {
+    serverHandler(c.Context())
+    return nil
   })
 
-  app.Use("/playground", func(c *fiber.Ctx){
-    playgroundHandler(c.Fasthttp)
+  app.Use("/playground", func(c *fiber.Ctx) error {
+    playgroundHandler(c.Context())
+    return nil
   })
 
-  app.Listen(8080)
+  log.Fatal(app.Listen(":8080"))
 }
 ```
 You could find a more comprehensive guide to help you get started [here](https://gqlgen.com/getting-started/).<br/>
