@@ -32,7 +32,7 @@ import (
   "<Your go module>/gql"
   "<Your go module>/generated"
   "github.com/arsmn/gqlgen/graphql/handler"
-	"github.com/arsmn/gqlgen/graphql/playground"
+  "github.com/arsmn/gqlgen/graphql/playground"
 )
 
 func main() {
@@ -66,7 +66,7 @@ import (
   "<Your go module>/gql"
   "<Your go module>/generated"
   "github.com/arsmn/gqlgen/graphql/handler"
-	"github.com/arsmn/gqlgen/graphql/playground"
+  "github.com/arsmn/gqlgen/graphql/playground"
 )
 
 func main() {
