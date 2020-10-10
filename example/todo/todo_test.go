@@ -10,7 +10,7 @@ import (
 )
 
 func TestTodo(t *testing.T) {
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(New())))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(New())).Handler())
 
 	var resp struct {
 		CreateTodo struct{ ID string }
@@ -180,7 +180,7 @@ func TestTodo(t *testing.T) {
 }
 
 func TestSkipAndIncludeDirectives(t *testing.T) {
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(New())))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(New())).Handler())
 
 	t.Run("skip on field", func(t *testing.T) {
 		var resp map[string]interface{}

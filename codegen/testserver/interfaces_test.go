@@ -39,7 +39,7 @@ func TestInterfaces(t *testing.T) {
 			}),
 		)
 
-		c := client.New(srv)
+		c := client.New(srv.Handler())
 
 		var resp struct {
 			Node struct {
@@ -71,7 +71,7 @@ func TestInterfaces(t *testing.T) {
 			}),
 		)
 
-		c := client.New(srv)
+		c := client.New(srv.Handler())
 
 		var resp interface{}
 		c.MustPost(`{ noShape { area } }`, &resp)
@@ -95,7 +95,7 @@ func TestInterfaces(t *testing.T) {
 			}),
 		)
 
-		c := client.New(srv)
+		c := client.New(srv.Handler())
 
 		var resp interface{}
 		c.MustPost(`{ noShapeTypedNil { area } }`, &resp)
@@ -119,7 +119,7 @@ func TestInterfaces(t *testing.T) {
 			}),
 		)
 
-		c := client.New(srv)
+		c := client.New(srv.Handler())
 
 		var resp interface{}
 		c.MustPost(`{ animal { species } }`, &resp)
@@ -137,7 +137,7 @@ func TestInterfaces(t *testing.T) {
 			}, nil
 		}
 
-		c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+		c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 		var resp struct {
 			NotAnInterface struct {
@@ -164,7 +164,7 @@ func TestInterfaces(t *testing.T) {
 			}, nil
 		}
 
-		c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+		c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 		var resp struct {
 			NotAnInterface struct {
@@ -183,7 +183,7 @@ func TestInterfaces(t *testing.T) {
 			return ConcreteNodeInterfaceImplementor{}, nil
 		}
 
-		c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+		c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 		var resp struct {
 			Node struct {

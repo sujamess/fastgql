@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"log"
-	"net/http"
 	"runtime/debug"
 
 	"github.com/99designs/gqlgen/example/todo"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/valyala/fasthttp"
 )
 
 func main() {
@@ -21,7 +21,19 @@ func main() {
 		return errors.New("user message on panic")
 	})
 
-	http.Handle("/", playground.Handler("Todo", "/query"))
-	http.Handle("/query", srv)
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	gqlHandler := srv.Handler()
+	playground := playground.Handler("Todo", "/query")
+
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
+
+	log.Fatal(fasthttp.ListenAndServe(":8081", h))
 }

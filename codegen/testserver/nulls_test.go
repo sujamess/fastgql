@@ -22,7 +22,7 @@ func TestNullBubbling(t *testing.T) {
 		return &Error{ID: "E1234"}, nil
 	}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	t.Run("when function errors on non required field", func(t *testing.T) {
 		var resp struct {

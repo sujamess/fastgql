@@ -13,7 +13,7 @@ import (
 func TestWrappedTypes(t *testing.T) {
 	resolvers := &Stub{}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	resolvers.QueryResolver.WrappedScalar = func(ctx context.Context) (scalar WrappedScalar, e error) {
 		return "hello", nil

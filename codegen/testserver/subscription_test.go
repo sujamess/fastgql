@@ -81,7 +81,7 @@ func TestSubscriptions(t *testing.T) {
 		return next(context.WithValue(ctx, ckey("path"), append(path, 2)))
 	})
 
-	c := client.New(srv)
+	c := client.New(srv.Handler())
 
 	t.Run("wont leak goroutines", func(t *testing.T) {
 		runtime.GC() // ensure no go-routines left from preceding tests

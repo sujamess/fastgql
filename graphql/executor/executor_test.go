@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/executor/testexecutor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
@@ -188,9 +189,10 @@ func TestErrorServer(t *testing.T) {
 }
 
 func query(exec *testexecutor.TestExecutor, op, q string) *graphql.Response {
-	ctx := graphql.StartOperationTrace(context.Background())
+	var ctx fasthttp.RequestCtx
+	graphql.StartOperationTrace(&ctx)
 	now := graphql.Now()
-	rc, err := exec.CreateOperationContext(ctx, &graphql.RawParams{
+	rc, err := exec.CreateOperationContext(&ctx, &graphql.RawParams{
 		Query:         q,
 		OperationName: op,
 		ReadTime: graphql.TraceTiming{
@@ -200,9 +202,9 @@ func query(exec *testexecutor.TestExecutor, op, q string) *graphql.Response {
 	})
 
 	if err != nil {
-		return exec.DispatchError(ctx, err)
+		return exec.DispatchError(&ctx, err)
 	}
 
-	resp, ctx2 := exec.DispatchOperation(ctx, rc)
+	resp, ctx2 := exec.DispatchOperation(&ctx, rc)
 	return resp(ctx2)
 }

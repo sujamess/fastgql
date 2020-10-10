@@ -8,8 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
-	"net/http"
-	"net/http/httptest"
 	"net/textproto"
 	"testing"
 
@@ -18,10 +16,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
 )
 
 func TestFileUpload(t *testing.T) {
-	client := http.Client{}
 
 	t.Run("valid single file upload", func(t *testing.T) {
 		resolver := &Stub{}
@@ -39,8 +37,6 @@ func TestFileUpload(t *testing.T) {
 				ContentType: file.ContentType,
 			}, nil
 		}
-		srv := httptest.NewServer(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})))
-		defer srv.Close()
 
 		operations := `{ "query": "mutation ($file: Upload!) { singleUpload(file: $file) { id, name, content, contentType } }", "variables": { "file": null } }`
 		mapData := `{ "0": ["variables.file"] }`
@@ -52,17 +48,14 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, srv.URL, operations, mapData, files)
 
-		resp, err := client.Do(req)
-		require.Nil(t, err)
-		require.Equal(t, http.StatusOK, resp.StatusCode)
-		responseBody, err := ioutil.ReadAll(resp.Body)
-		require.Nil(t, err)
-		responseString := string(responseBody)
-		require.Equal(t, `{"data":{"singleUpload":{"id":1,"name":"a.txt","content":"test","contentType":"text/plain"}}}`, responseString)
-		err = resp.Body.Close()
-		require.Nil(t, err)
+		h := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})).Handler()
+		resp := createUploadRequest(t, h, operations, mapData, files)
+
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode())
+		responseBody := resp.Body()
+		require.NotNil(t, responseBody)
+		require.Equal(t, `{"data":{"singleUpload":{"id":1,"name":"a.txt","content":"test","contentType":"text/plain"}}}`, string(responseBody))
 	})
 
 	t.Run("valid single file upload with payload", func(t *testing.T) {
@@ -82,8 +75,6 @@ func TestFileUpload(t *testing.T) {
 				ContentType: req.File.ContentType,
 			}, nil
 		}
-		srv := httptest.NewServer(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})))
-		defer srv.Close()
 
 		operations := `{ "query": "mutation ($req: UploadFile!) { singleUploadWithPayload(req: $req) { id, name, content, contentType } }", "variables": { "req": {"file": null, "id": 1 } } }`
 		mapData := `{ "0": ["variables.req.file"] }`
@@ -95,16 +86,14 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, srv.URL, operations, mapData, files)
 
-		resp, err := client.Do(req)
-		require.Nil(t, err)
-		require.Equal(t, http.StatusOK, resp.StatusCode)
-		responseBody, err := ioutil.ReadAll(resp.Body)
-		require.Nil(t, err)
+		h := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})).Handler()
+		resp := createUploadRequest(t, h, operations, mapData, files)
+
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode())
+		responseBody := resp.Body()
+		require.NotNil(t, responseBody)
 		require.Equal(t, `{"data":{"singleUploadWithPayload":{"id":1,"name":"a.txt","content":"test","contentType":"text/plain"}}}`, string(responseBody))
-		err = resp.Body.Close()
-		require.Nil(t, err)
 	})
 
 	t.Run("valid file list upload", func(t *testing.T) {
@@ -128,8 +117,6 @@ func TestFileUpload(t *testing.T) {
 			require.ElementsMatch(t, []string{"test1", "test2"}, contents)
 			return resp, nil
 		}
-		srv := httptest.NewServer(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})))
-		defer srv.Close()
 
 		operations := `{ "query": "mutation($files: [Upload!]!) { multipleUpload(files: $files) { id, name, content, contentType } }", "variables": { "files": [null, null] } }`
 		mapData := `{ "0": ["variables.files.0"], "1": ["variables.files.1"] }`
@@ -147,16 +134,14 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, srv.URL, operations, mapData, files)
 
-		resp, err := client.Do(req)
-		require.Nil(t, err)
-		require.Equal(t, http.StatusOK, resp.StatusCode)
-		responseBody, err := ioutil.ReadAll(resp.Body)
-		require.Nil(t, err)
+		h := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})).Handler()
+		resp := createUploadRequest(t, h, operations, mapData, files)
+
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode())
+		responseBody := resp.Body()
+		require.NotNil(t, responseBody)
 		require.Equal(t, `{"data":{"multipleUpload":[{"id":1,"name":"a.txt","content":"test1","contentType":"text/plain"},{"id":2,"name":"b.txt","content":"test2","contentType":"text/plain"}]}}`, string(responseBody))
-		err = resp.Body.Close()
-		require.Nil(t, err)
 	})
 
 	t.Run("valid file list upload with payload", func(t *testing.T) {
@@ -184,8 +169,6 @@ func TestFileUpload(t *testing.T) {
 			require.ElementsMatch(t, []string{"test1", "test2"}, contents)
 			return resp, nil
 		}
-		srv := httptest.NewServer(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})))
-		defer srv.Close()
 
 		operations := `{ "query": "mutation($req: [UploadFile!]!) { multipleUploadWithPayload(req: $req) { id, name, content, contentType } }", "variables": { "req": [ { "id": 1, "file": null }, { "id": 2, "file": null } ] } }`
 		mapData := `{ "0": ["variables.req.0.file"], "1": ["variables.req.1.file"] }`
@@ -203,16 +186,13 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, srv.URL, operations, mapData, files)
 
-		resp, err := client.Do(req)
-		require.Nil(t, err)
-		require.Equal(t, http.StatusOK, resp.StatusCode)
-		responseBody, err := ioutil.ReadAll(resp.Body)
-		require.Nil(t, err)
+		h := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})).Handler()
+		resp := createUploadRequest(t, h, operations, mapData, files)
+
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode())
+		responseBody := resp.Body()
 		require.Equal(t, `{"data":{"multipleUploadWithPayload":[{"id":1,"name":"a.txt","content":"test1","contentType":"text/plain"},{"id":2,"name":"b.txt","content":"test2","contentType":"text/plain"}]}}`, string(responseBody))
-		err = resp.Body.Close()
-		require.Nil(t, err)
 	})
 
 	t.Run("valid file list upload with payload and file reuse", func(t *testing.T) {
@@ -267,17 +247,12 @@ func TestFileUpload(t *testing.T) {
 			hndlr := handler.New(NewExecutableSchema(Config{Resolvers: resolver}))
 			hndlr.AddTransport(transport.MultipartForm{MaxMemory: uploadMaxMemory})
 
-			srv := httptest.NewServer(hndlr)
-			defer srv.Close()
-			req := createUploadRequest(t, srv.URL, operations, mapData, files)
-			resp, err := client.Do(req)
-			require.Nil(t, err)
-			require.Equal(t, http.StatusOK, resp.StatusCode)
-			responseBody, err := ioutil.ReadAll(resp.Body)
-			require.Nil(t, err)
+			resp := createUploadRequest(t, hndlr.Handler(), operations, mapData, files)
+
+			require.Equal(t, fasthttp.StatusOK, resp.StatusCode())
+			responseBody := resp.Body()
+			require.NotNil(t, responseBody)
 			require.Equal(t, `{"data":{"multipleUploadWithPayload":[{"id":1,"name":"a.txt","content":"test1","contentType":"text/plain"},{"id":2,"name":"a.txt","content":"test1","contentType":"text/plain"}]}}`, string(responseBody))
-			err = resp.Body.Close()
-			require.Nil(t, err)
 		}
 
 		t.Run("payload smaller than UploadMaxMemory, stored in memory", func(t *testing.T) {
@@ -288,6 +263,7 @@ func TestFileUpload(t *testing.T) {
 			test(2)
 		})
 	})
+
 }
 
 type file struct {
@@ -297,7 +273,7 @@ type file struct {
 	contentType string
 }
 
-func createUploadRequest(t *testing.T, url, operations, mapData string, files []file) *http.Request {
+func createUploadRequest(t *testing.T, handler fasthttp.RequestHandler, operations, mapData string, files []file) *fasthttp.Response {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -319,9 +295,18 @@ func createUploadRequest(t *testing.T, url, operations, mapData string, files []
 	err = bodyWriter.Close()
 	require.NoError(t, err)
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/graphql", url), bodyBuf)
-	require.NoError(t, err)
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
 
-	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
-	return req
+	req.Header.SetMethod("POST")
+	req.SetRequestURI("graphql")
+	req.SetBodyStream(bodyBuf, bodyBuf.Len())
+	req.Header.SetContentType(bodyWriter.FormDataContentType())
+
+	var fctx fasthttp.RequestCtx
+	fctx.Init(req, nil, nil)
+
+	handler(&fctx)
+
+	return &fctx.Response
 }

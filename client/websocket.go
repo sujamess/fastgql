@@ -3,11 +3,12 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http/httptest"
+	"net/http"
 	"strings"
 
 	"github.com/fasthttp/websocket"
+	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttputil"
 )
 
 const (
@@ -56,14 +57,32 @@ func (p *Client) WebsocketWithPayload(query string, initPayload map[string]inter
 		return errorSubscription(fmt.Errorf("request: %s", err.Error()))
 	}
 
-	requestBody, err := ioutil.ReadAll(r.Body)
-	if err != nil {
+	requestBody := r.Body()
+	if requestBody == nil {
 		return errorSubscription(fmt.Errorf("parse body: %s", err.Error()))
 	}
 
-	srv := httptest.NewServer(p.h)
-	host := strings.Replace(srv.URL, "http://", "ws://", -1)
-	c, _, err := websocket.DefaultDialer.Dial(host+r.URL.Path, r.Header)
+	srv := &fasthttp.Server{
+		Handler: p.h,
+	}
+	ln := fasthttputil.NewInmemoryListener()
+	defer ln.Close()
+	go func() {
+		if err := srv.Serve(ln); err != nil {
+			panic(fmt.Errorf("unexpected error: %v", err))
+		}
+	}()
+
+	url := ln.Addr().String()
+
+	host := strings.Replace(url, "http://", "ws://", -1)
+
+	var headers http.Header
+	r.Header.VisitAll(func(key, value []byte) {
+		headers.Add(string(key), string(value))
+	})
+
+	c, _, err := websocket.DefaultDialer.Dial(host+r.URI().String(), headers)
 
 	if err != nil {
 		return errorSubscription(fmt.Errorf("dial: %s", err.Error()))
@@ -105,7 +124,7 @@ func (p *Client) WebsocketWithPayload(query string, initPayload map[string]inter
 
 	return &Subscription{
 		Close: func() error {
-			srv.Close()
+			ln.Close()
 			return c.Close()
 		},
 		Next: func(response interface{}) error {

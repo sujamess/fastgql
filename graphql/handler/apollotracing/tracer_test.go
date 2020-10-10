@@ -3,7 +3,6 @@ package apollotracing_test
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
@@ -34,14 +34,14 @@ func TestApolloTracing(t *testing.T) {
 	h.AddTransport(transport.POST{})
 	h.Use(apollotracing.Tracer{})
 
-	resp := doRequest(h, http.MethodPost, "/graphql", `{"query":"{ name }"}`)
-	assert.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+	resp := doRequest(h.Handler(), http.MethodPost, "/graphql", `{"query":"{ name }"}`)
+	assert.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
 	var respData struct {
 		Extensions struct {
 			Tracing apollotracing.TracingExtension `json:"tracing"`
 		} `json:"extensions"`
 	}
-	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &respData))
+	require.NoError(t, json.Unmarshal(resp.Body(), &respData))
 
 	tracing := &respData.Extensions.Tracing
 
@@ -80,9 +80,9 @@ func TestApolloTracing_withFail(t *testing.T) {
 	h.Use(extension.AutomaticPersistedQuery{Cache: lru.New(100)})
 	h.Use(apollotracing.Tracer{})
 
-	resp := doRequest(h, http.MethodPost, "/graphql", `{"operationName":"A","extensions":{"persistedQuery":{"version":1,"sha256Hash":"338bbc16ac780daf81845339fbf0342061c1e9d2b702c96d3958a13a557083a6"}}}`)
-	assert.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-	b := resp.Body.Bytes()
+	resp := doRequest(h.Handler(), http.MethodPost, "/graphql", `{"operationName":"A","extensions":{"persistedQuery":{"version":1,"sha256Hash":"338bbc16ac780daf81845339fbf0342061c1e9d2b702c96d3958a13a557083a6"}}}`)
+	assert.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+	b := resp.Body()
 	t.Log(string(b))
 	var respData struct {
 		Errors gqlerror.List
@@ -92,11 +92,19 @@ func TestApolloTracing_withFail(t *testing.T) {
 	require.Equal(t, "PersistedQueryNotFound", respData.Errors[0].Message)
 }
 
-func doRequest(handler http.Handler, method, target, body string) *httptest.ResponseRecorder {
-	r := httptest.NewRequest(method, target, strings.NewReader(body))
-	r.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
+func doRequest(handler fasthttp.RequestHandler, method string, target string, body string) *fasthttp.Response {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
 
-	handler.ServeHTTP(w, r)
-	return w
+	req.SetRequestURI(target)
+	req.Header.SetMethod(method)
+	req.Header.SetContentType("application/json")
+	req.SetBodyStream(strings.NewReader(body), len(body))
+
+	var fctx fasthttp.RequestCtx
+	fctx.Init(req, nil, nil)
+
+	handler(&fctx)
+
+	return &fctx.Response
 }

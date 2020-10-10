@@ -38,7 +38,7 @@ func TestUnionFragments(t *testing.T) {
 	}
 
 	srv := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers}))
-	c := client.New(srv)
+	c := client.New(srv.Handler())
 
 	t.Run("inline fragment on union", func(t *testing.T) {
 		var resp struct {

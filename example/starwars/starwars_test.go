@@ -11,7 +11,7 @@ import (
 )
 
 func TestStarwars(t *testing.T) {
-	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(NewResolver())))
+	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(NewResolver())).Handler())
 
 	t.Run("Lukes starships", func(t *testing.T) {
 		var resp struct {

@@ -21,7 +21,7 @@ type RawUser struct {
 }
 
 func TestScalars(t *testing.T) {
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: &Resolver{}})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: &Resolver{}})).Handler())
 
 	t.Run("marshaling", func(t *testing.T) {
 		var resp struct {

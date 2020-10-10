@@ -2,8 +2,6 @@ package extension_test
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -12,6 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/testserver"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
 )
 
 func TestHandlerComplexity(t *testing.T) {
@@ -34,9 +33,9 @@ func TestHandlerComplexity(t *testing.T) {
 	t.Run("below complexity limit", func(t *testing.T) {
 		stats = nil
 		h.SetCalculatedComplexity(2)
-		resp := doRequest(h, "POST", "/graphql", `{"query":"{ name }"}`)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"data":{"name":"test"}}`, resp.Body.String())
+		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query":"{ name }"}`)
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"data":{"name":"test"}}`, string(resp.Body()))
 
 		require.Equal(t, 2, stats.ComplexityLimit)
 		require.Equal(t, 2, stats.Complexity)
@@ -45,9 +44,9 @@ func TestHandlerComplexity(t *testing.T) {
 	t.Run("above complexity limit", func(t *testing.T) {
 		stats = nil
 		h.SetCalculatedComplexity(4)
-		resp := doRequest(h, "POST", "/graphql", `{"query":"{ name }"}`)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"operation has complexity 4, which exceeds the limit of 2","extensions":{"code":"COMPLEXITY_LIMIT_EXCEEDED"}}],"data":null}`, resp.Body.String())
+		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query":"{ name }"}`)
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"operation has complexity 4, which exceeds the limit of 2","extensions":{"code":"COMPLEXITY_LIMIT_EXCEEDED"}}],"data":null}`, string(resp.Body()))
 
 		require.Equal(t, 2, stats.ComplexityLimit)
 		require.Equal(t, 4, stats.Complexity)
@@ -56,9 +55,9 @@ func TestHandlerComplexity(t *testing.T) {
 	t.Run("within dynamic complexity limit", func(t *testing.T) {
 		stats = nil
 		h.SetCalculatedComplexity(4)
-		resp := doRequest(h, "POST", "/graphql", `{"query":"{ ok: name }"}`)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"data":{"name":"test"}}`, resp.Body.String())
+		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query":"{ ok: name }"}`)
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"data":{"name":"test"}}`, string(resp.Body()))
 
 		require.Equal(t, 4, stats.ComplexityLimit)
 		require.Equal(t, 4, stats.Complexity)
@@ -78,9 +77,9 @@ func TestFixedComplexity(t *testing.T) {
 
 	t.Run("below complexity limit", func(t *testing.T) {
 		h.SetCalculatedComplexity(2)
-		resp := doRequest(h, "POST", "/graphql", `{"query":"{ name }"}`)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"data":{"name":"test"}}`, resp.Body.String())
+		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query":"{ name }"}`)
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"data":{"name":"test"}}`, string(resp.Body()))
 
 		require.Equal(t, 2, stats.ComplexityLimit)
 		require.Equal(t, 2, stats.Complexity)
@@ -88,20 +87,28 @@ func TestFixedComplexity(t *testing.T) {
 
 	t.Run("above complexity limit", func(t *testing.T) {
 		h.SetCalculatedComplexity(4)
-		resp := doRequest(h, "POST", "/graphql", `{"query":"{ name }"}`)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"operation has complexity 4, which exceeds the limit of 2","extensions":{"code":"COMPLEXITY_LIMIT_EXCEEDED"}}],"data":null}`, resp.Body.String())
+		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query":"{ name }"}`)
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"operation has complexity 4, which exceeds the limit of 2","extensions":{"code":"COMPLEXITY_LIMIT_EXCEEDED"}}],"data":null}`, string(resp.Body()))
 
 		require.Equal(t, 2, stats.ComplexityLimit)
 		require.Equal(t, 4, stats.Complexity)
 	})
 }
 
-func doRequest(handler http.Handler, method string, target string, body string) *httptest.ResponseRecorder {
-	r := httptest.NewRequest(method, target, strings.NewReader(body))
-	r.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
+func doRequest(handler fasthttp.RequestHandler, method string, target string, body string) *fasthttp.Response {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
 
-	handler.ServeHTTP(w, r)
-	return w
+	req.SetRequestURI(target)
+	req.Header.SetMethod(method)
+	req.Header.SetContentType("application/json")
+	req.SetBodyStream(strings.NewReader(body), len(body))
+
+	var fctx fasthttp.RequestCtx
+	fctx.Init(req, nil, nil)
+
+	handler(&fctx)
+
+	return &fctx.Response
 }

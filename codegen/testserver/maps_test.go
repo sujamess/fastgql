@@ -21,9 +21,7 @@ func TestMaps(t *testing.T) {
 		return in.Map, nil
 	}
 
-	c := client.New(handler.NewDefaultServer(
-		NewExecutableSchema(Config{Resolvers: resolver}),
-	))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})).Handler())
 	t.Run("unset", func(t *testing.T) {
 		var resp struct {
 			MapStringInterface map[string]interface{}

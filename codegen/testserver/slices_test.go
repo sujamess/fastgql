@@ -12,7 +12,7 @@ import (
 func TestSlices(t *testing.T) {
 	resolvers := &Stub{}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	t.Run("nulls vs empty slices", func(t *testing.T) {
 		resolvers.QueryResolver.Slices = func(ctx context.Context) (slices *Slices, e error) {

@@ -7,16 +7,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/valyala/fasthttp"
 )
 
 type (
 	// Client used for testing GraphQL servers. Not for production use.
 	Client struct {
-		h    http.Handler
+		h    fasthttp.RequestHandler
 		opts []Option
 	}
 
@@ -30,7 +29,7 @@ type (
 		Query         string                 `json:"query"`
 		Variables     map[string]interface{} `json:"variables,omitempty"`
 		OperationName string                 `json:"operationName,omitempty"`
-		HTTP          *http.Request          `json:"-"`
+		HTTP          *fasthttp.Request      `json:"-"`
 	}
 
 	// Response is a GraphQL layer response from a handler.
@@ -43,7 +42,7 @@ type (
 
 // New creates a graphql client
 // Options can be set that should be applied to all requests made with this client
-func New(h http.Handler, opts ...Option) *Client {
+func New(h fasthttp.RequestHandler, opts ...Option) *Client {
 	p := &Client{
 		h:    h,
 		opts: opts,
@@ -85,17 +84,20 @@ func (p *Client) RawPost(query string, options ...Option) (*Response, error) {
 		return nil, fmt.Errorf("build: %s", err.Error())
 	}
 
-	w := httptest.NewRecorder()
-	p.h.ServeHTTP(w, r)
+	var fctx fasthttp.RequestCtx
+	fctx.Init(r, nil, nil)
+	p.h(&fctx)
 
-	if w.Code >= http.StatusBadRequest {
-		return nil, fmt.Errorf("http %d: %s", w.Code, w.Body.String())
+	resp := &fctx.Response
+
+	if resp.StatusCode() >= fasthttp.StatusBadRequest {
+		return nil, fmt.Errorf("http %d: %s", resp.StatusCode(), string(resp.Body()))
 	}
 
 	// decode it into map string first, let mapstructure do the final decode
 	// because it can be much stricter about unknown fields.
 	respDataRaw := &Response{}
-	err = json.Unmarshal(w.Body.Bytes(), &respDataRaw)
+	err = json.Unmarshal(resp.Body(), &respDataRaw)
 	if err != nil {
 		return nil, fmt.Errorf("decode: %s", err.Error())
 	}
@@ -103,12 +105,17 @@ func (p *Client) RawPost(query string, options ...Option) (*Response, error) {
 	return respDataRaw, nil
 }
 
-func (p *Client) newRequest(query string, options ...Option) (*http.Request, error) {
+func (p *Client) newRequest(query string, options ...Option) (*fasthttp.Request, error) {
 	bd := &Request{
 		Query: query,
-		HTTP:  httptest.NewRequest(http.MethodPost, "/", nil),
+		// HTTP:  httptest.NewRequest(http.MethodPost, "/", nil),
 	}
-	bd.HTTP.Header.Set("Content-Type", "application/json")
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+
+	req.SetRequestURI("/")
+	req.Header.SetMethod("POST")
+	req.Header.SetContentType("application/json")
 
 	// per client options from client.New apply first
 	for _, option := range p.opts {
@@ -119,15 +126,16 @@ func (p *Client) newRequest(query string, options ...Option) (*http.Request, err
 		option(bd)
 	}
 
-	switch bd.HTTP.Header.Get("Content-Type") {
+	ct := string(bd.HTTP.Header.ContentType())
+	switch ct {
 	case "application/json":
 		requestBody, err := json.Marshal(bd)
 		if err != nil {
 			return nil, fmt.Errorf("encode: %s", err.Error())
 		}
-		bd.HTTP.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+		bd.HTTP.SetBodyStream(ioutil.NopCloser(bytes.NewBuffer(requestBody)), len(requestBody))
 	default:
-		panic("unsupported encoding" + bd.HTTP.Header.Get("Content-Type"))
+		panic("unsupported encoding" + ct)
 	}
 
 	return bd.HTTP, nil

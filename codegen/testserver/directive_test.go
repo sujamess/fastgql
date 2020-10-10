@@ -190,7 +190,7 @@ func TestDirectives(t *testing.T) {
 		return next(context.WithValue(ctx, ckey("path"), append(path, 2)))
 	})
 
-	c := client.New(srv)
+	c := client.New(srv.Handler())
 
 	t.Run("arg directives", func(t *testing.T) {
 		t.Run("when function errors on directives", func(t *testing.T) {

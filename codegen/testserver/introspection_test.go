@@ -18,7 +18,7 @@ func TestIntrospection(t *testing.T) {
 
 		srv := handler.New(NewExecutableSchema(Config{Resolvers: resolvers}))
 		srv.AddTransport(transport.POST{})
-		c := client.New(srv)
+		c := client.New(srv.Handler())
 
 		var resp interface{}
 		err := c.Post(introspection.Query, &resp)
@@ -28,9 +28,7 @@ func TestIntrospection(t *testing.T) {
 	t.Run("enabled by default", func(t *testing.T) {
 		resolvers := &Stub{}
 
-		c := client.New(handler.NewDefaultServer(
-			NewExecutableSchema(Config{Resolvers: resolvers}),
-		))
+		c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 		var resp interface{}
 		err := c.Post(introspection.Query, &resp)
@@ -70,7 +68,7 @@ func TestIntrospection(t *testing.T) {
 			graphql.GetOperationContext(ctx).DisableIntrospection = true
 			return next(ctx)
 		})
-		c := client.New(srv)
+		c := client.New(srv.Handler())
 
 		var resp interface{}
 		err := c.Post(introspection.Query, &resp)

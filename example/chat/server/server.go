@@ -8,7 +8,6 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/gofiber/fiber/v2"
 	"github.com/valyala/fasthttp"
 
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -31,7 +30,6 @@ func main() {
 	// })
 
 	srv := handler.New(chat.NewExecutableSchema(chat.New()))
-
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 2 * time.Second,
@@ -43,21 +41,21 @@ func main() {
 	})
 	srv.Use(extension.Introspection{})
 
-	app := fiber.New()
 	playground := playground.Handler("Todo", "/query")
 	gqlHandler := srv.Handler()
 
-	app.All("/query", func(c *fiber.Ctx) error {
-		gqlHandler(c.Context())
-		return nil
-	})
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
 
-	app.All("/", func(c *fiber.Ctx) error {
-		playground(c.Context())
-		return nil
-	})
-
-	log.Fatal(app.Listen(":8081"))
+	log.Fatal(fasthttp.ListenAndServe(":8081", h))
 }
 
 func startAppdashServer() opentracing.Tracer {

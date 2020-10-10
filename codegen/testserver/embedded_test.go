@@ -27,9 +27,7 @@ func TestEmbedded(t *testing.T) {
 		return &EmbeddedCase3{&fakeUnexportedEmbeddedInterface{}}, nil
 	}
 
-	c := client.New(handler.NewDefaultServer(
-		NewExecutableSchema(Config{Resolvers: resolver}),
-	))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})).Handler())
 
 	t.Run("embedded case 1", func(t *testing.T) {
 		var resp struct {

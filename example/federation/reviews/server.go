@@ -10,7 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/debug"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gofiber/fiber/v2"
+	"github.com/valyala/fasthttp"
 )
 
 const defaultPort = "4003"
@@ -21,23 +21,23 @@ func main() {
 		port = defaultPort
 	}
 
-	app := fiber.New()
-	playground := playground.Handler("GraphQL playground", "/query")
-
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 	srv.Use(&debug.Tracer{})
+
+	playground := playground.Handler("GraphQL playground", "/query")
 	gqlHandler := srv.Handler()
 
-	app.All("/query", func(c *fiber.Ctx) error {
-		gqlHandler(c.Context())
-		return nil
-	})
-
-	app.All("/", func(c *fiber.Ctx) error {
-		playground(c.Context())
-		return nil
-	})
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(app.Listen(":" + port))
+	log.Fatal(fasthttp.ListenAndServe(":"+port, h))
 }

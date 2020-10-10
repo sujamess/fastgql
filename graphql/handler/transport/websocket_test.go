@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +16,8 @@ import (
 	"github.com/fasthttp/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttputil"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -27,11 +28,21 @@ func TestWebsocket(t *testing.T) {
 	handler := testserver.New()
 	handler.AddTransport(transport.Websocket{})
 
-	srv := httptest.NewServer(handler)
-	defer srv.Close()
+	srv := &fasthttp.Server{
+		Handler: handler.Handler(),
+	}
+	ln := fasthttputil.NewInmemoryListener()
+	defer ln.Close()
+	go func() {
+		if err := srv.Serve(ln); err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+	}()
+
+	url := ln.Addr().String()
 
 	t.Run("client must send valid json", func(t *testing.T) {
-		c := wsConnect(srv.URL)
+		c := wsConnect(url)
 		defer c.Close()
 
 		writeRaw(c, "hello")
@@ -42,7 +53,7 @@ func TestWebsocket(t *testing.T) {
 	})
 
 	t.Run("client can terminate before init", func(t *testing.T) {
-		c := wsConnect(srv.URL)
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionTerminateMsg}))
@@ -52,7 +63,7 @@ func TestWebsocket(t *testing.T) {
 	})
 
 	t.Run("client must send init first", func(t *testing.T) {
-		c := wsConnect(srv.URL)
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: startMsg}))
@@ -63,7 +74,7 @@ func TestWebsocket(t *testing.T) {
 	})
 
 	t.Run("server acks init", func(t *testing.T) {
-		c := wsConnect(srv.URL)
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -73,7 +84,7 @@ func TestWebsocket(t *testing.T) {
 	})
 
 	t.Run("client can terminate before run", func(t *testing.T) {
-		c := wsConnect(srv.URL)
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -87,7 +98,7 @@ func TestWebsocket(t *testing.T) {
 	})
 
 	t.Run("client gets parse errors", func(t *testing.T) {
-		c := wsConnect(srv.URL)
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -106,7 +117,7 @@ func TestWebsocket(t *testing.T) {
 	})
 
 	t.Run("client can receive data", func(t *testing.T) {
-		c := wsConnect(srv.URL)
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -146,10 +157,20 @@ func TestWebsocketWithKeepAlive(t *testing.T) {
 		KeepAlivePingInterval: 100 * time.Millisecond,
 	})
 
-	srv := httptest.NewServer(h)
-	defer srv.Close()
+	srv := &fasthttp.Server{
+		Handler: h.Handler(),
+	}
+	ln := fasthttputil.NewInmemoryListener()
+	defer ln.Close()
+	go func() {
+		if err := srv.Serve(ln); err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+	}()
 
-	c := wsConnect(srv.URL)
+	url := ln.Addr().String()
+
+	c := wsConnect(url)
 	defer c.Close()
 
 	require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -180,10 +201,21 @@ func TestWebsocketInitFunc(t *testing.T) {
 	t.Run("accept connection if WebsocketInitFunc is NOT provided", func(t *testing.T) {
 		h := testserver.New()
 		h.AddTransport(transport.Websocket{})
-		srv := httptest.NewServer(h)
-		defer srv.Close()
 
-		c := wsConnect(srv.URL)
+		srv := &fasthttp.Server{
+			Handler: h.Handler(),
+		}
+		ln := fasthttputil.NewInmemoryListener()
+		defer ln.Close()
+		go func() {
+			if err := srv.Serve(ln); err != nil {
+				t.Errorf("unexpected error: %s", err)
+			}
+		}()
+
+		url := ln.Addr().String()
+
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -195,14 +227,26 @@ func TestWebsocketInitFunc(t *testing.T) {
 	t.Run("accept connection if WebsocketInitFunc is provided and is accepting connection", func(t *testing.T) {
 		h := testserver.New()
 		h.AddTransport(transport.Websocket{
-			InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
-				return context.WithValue(ctx, ckey("newkey"), "newvalue"), nil
+			InitFunc: func(ctx *fasthttp.RequestCtx, initPayload transport.InitPayload) (*fasthttp.RequestCtx, error) {
+				ctx.SetUserValue("newkey", "newvalue")
+				return ctx, nil
 			},
 		})
-		srv := httptest.NewServer(h)
-		defer srv.Close()
 
-		c := wsConnect(srv.URL)
+		srv := &fasthttp.Server{
+			Handler: h.Handler(),
+		}
+		ln := fasthttputil.NewInmemoryListener()
+		defer ln.Close()
+		go func() {
+			if err := srv.Serve(ln); err != nil {
+				t.Errorf("unexpected error: %s", err)
+			}
+		}()
+
+		url := ln.Addr().String()
+
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -214,14 +258,25 @@ func TestWebsocketInitFunc(t *testing.T) {
 	t.Run("reject connection if WebsocketInitFunc is provided and is accepting connection", func(t *testing.T) {
 		h := testserver.New()
 		h.AddTransport(transport.Websocket{
-			InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
+			InitFunc: func(ctx *fasthttp.RequestCtx, initPayload transport.InitPayload) (*fasthttp.RequestCtx, error) {
 				return ctx, errors.New("invalid init payload")
 			},
 		})
-		srv := httptest.NewServer(h)
-		defer srv.Close()
 
-		c := wsConnect(srv.URL)
+		srv := &fasthttp.Server{
+			Handler: h.Handler(),
+		}
+		ln := fasthttputil.NewInmemoryListener()
+		defer ln.Close()
+		go func() {
+			if err := srv.Serve(ln); err != nil {
+				t.Errorf("unexpected error: %s", err)
+			}
+		}()
+
+		url := ln.Addr().String()
+
+		c := wsConnect(url)
 		defer c.Close()
 
 		require.NoError(t, c.WriteJSON(&operationMessage{Type: connectionInitMsg}))
@@ -249,12 +304,13 @@ func TestWebsocketInitFunc(t *testing.T) {
 		h := handler.New(es)
 
 		h.AddTransport(transport.Websocket{
-			InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
-				return context.WithValue(ctx, ckey("newkey"), "newvalue"), nil
+			InitFunc: func(ctx *fasthttp.RequestCtx, initPayload transport.InitPayload) (*fasthttp.RequestCtx, error) {
+				ctx.SetUserValue("newkey", "newvalue")
+				return ctx, nil
 			},
 		})
 
-		c := client.New(h)
+		c := client.New(h.Handler())
 
 		socket := c.Websocket("{ empty } ")
 		defer socket.Close()

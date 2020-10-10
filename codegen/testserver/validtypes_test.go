@@ -18,7 +18,7 @@ func TestValidType(t *testing.T) {
 		}, nil
 	}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	t.Run("fields with differing cases can be distinguished", func(t *testing.T) {
 		var resp struct {

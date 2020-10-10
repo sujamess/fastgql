@@ -15,7 +15,7 @@ func TestEnumsResolver(t *testing.T) {
 		return input.Enum, nil
 	}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	t.Run("input with valid enum value", func(t *testing.T) {
 		var resp struct {

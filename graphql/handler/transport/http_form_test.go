@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"mime/multipart"
-	"net/http"
-	"net/http/httptest"
 	"net/textproto"
 	"testing"
 
@@ -15,6 +13,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -60,12 +59,10 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, operations, mapData, files)
+		resp := upload(t, h.Handler(), operations, mapData, files)
 
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"data":{"singleUpload":"test"}}`, resp.Body.String())
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"data":{"singleUpload":"test"}}`, string(resp.Body()))
 	})
 
 	t.Run("valid single file upload with payload", func(t *testing.T) {
@@ -86,12 +83,10 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, operations, mapData, files)
+		resp := upload(t, h.Handler(), operations, mapData, files)
 
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"data":{"singleUploadWithPayload":"test"}}`, resp.Body.String())
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"data":{"singleUploadWithPayload":"test"}}`, string(resp.Body()))
 	})
 
 	t.Run("valid file list upload", func(t *testing.T) {
@@ -118,12 +113,10 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, operations, mapData, files)
+		resp := upload(t, h.Handler(), operations, mapData, files)
 
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"data":{"multipleUpload":[{"id":1},{"id":2}]}}`, resp.Body.String())
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"data":{"multipleUpload":[{"id":1},{"id":2}]}}`, string(resp.Body()))
 	})
 
 	t.Run("valid file list upload with payload", func(t *testing.T) {
@@ -150,12 +143,10 @@ func TestFileUpload(t *testing.T) {
 				contentType: "text/plain",
 			},
 		}
-		req := createUploadRequest(t, operations, mapData, files)
+		resp := upload(t, h.Handler(), operations, mapData, files)
 
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusOK, resp.Code)
-		require.Equal(t, `{"data":{"multipleUploadWithPayload":[{"id":1},{"id":2}]}}`, resp.Body.String())
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode())
+		require.Equal(t, `{"data":{"multipleUploadWithPayload":[{"id":1},{"id":2}]}}`, string(resp.Body()))
 	})
 
 	t.Run("valid file list upload with payload and file reuse", func(t *testing.T) {
@@ -178,12 +169,10 @@ func TestFileUpload(t *testing.T) {
 					contentType: "text/plain",
 				},
 			}
-			req := createUploadRequest(t, operations, mapData, files)
+			resp := upload(t, h.Handler(), operations, mapData, files)
 
-			resp := httptest.NewRecorder()
-			h.ServeHTTP(resp, req)
-			require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-			require.Equal(t, `{"data":{"multipleUploadWithPayload":[{"id":1},{"id":2}]}}`, resp.Body.String())
+			require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+			require.Equal(t, `{"data":{"multipleUploadWithPayload":[{"id":1},{"id":2}]}}`, string(resp.Body()))
 		}
 
 		t.Run("payload smaller than UploadMaxMemory, stored in memory", func(t *testing.T) {
@@ -207,65 +196,56 @@ func TestFileUpload(t *testing.T) {
 	}
 
 	t.Run("failed to parse multipart", func(t *testing.T) {
-		req := &http.Request{
-			Method: "POST",
-			Header: http.Header{"Content-Type": {`multipart/form-data; boundary="foo123"`}},
-			Body:   ioutil.NopCloser(new(bytes.Buffer)),
-		}
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusUnprocessableEntity, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"failed to parse multipart form"}],"data":null}`, resp.Body.String())
+		req := fasthttp.AcquireRequest()
+		defer fasthttp.ReleaseRequest(req)
+
+		req.Header.SetMethod("POST")
+		req.Header.SetContentType(`multipart/form-data; boundary="foo123"`)
+		req.SetBodyStream(ioutil.NopCloser(new(bytes.Buffer)), 0)
+
+		var fctx fasthttp.RequestCtx
+		fctx.Init(req, nil, nil)
+
+		h.Handler()(&fctx)
+		resp := &fctx.Response
+
+		require.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"failed to parse multipart form"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("fail parse operation", func(t *testing.T) {
 		operations := `invalid operation`
-		req := createUploadRequest(t, operations, validMap, validFiles)
-
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusUnprocessableEntity, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"operations form field could not be decoded"}],"data":null}`, resp.Body.String())
+		resp := upload(t, h.Handler(), operations, validMap, validFiles)
+		require.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"operations form field could not be decoded"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("fail parse map", func(t *testing.T) {
 		mapData := `invalid map`
-		req := createUploadRequest(t, validOperations, mapData, validFiles)
-
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusUnprocessableEntity, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"map form field could not be decoded"}],"data":null}`, resp.Body.String())
+		resp := upload(t, h.Handler(), validOperations, mapData, validFiles)
+		require.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"map form field could not be decoded"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("fail missing file", func(t *testing.T) {
 		var files []file
-		req := createUploadRequest(t, validOperations, validMap, files)
-
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusUnprocessableEntity, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"failed to get key 0 from form"}],"data":null}`, resp.Body.String())
+		resp := upload(t, h.Handler(), validOperations, validMap, files)
+		require.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"failed to get key 0 from form"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("fail map entry with invalid operations paths prefix", func(t *testing.T) {
 		mapData := `{ "0": ["var.file"] }`
-		req := createUploadRequest(t, validOperations, mapData, validFiles)
-
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusUnprocessableEntity, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"invalid operations paths for key 0"}],"data":null}`, resp.Body.String())
+		resp := upload(t, h.Handler(), validOperations, mapData, validFiles)
+		require.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"invalid operations paths for key 0"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("fail parse request big body", func(t *testing.T) {
 		multipartForm.MaxUploadSize = 2
-		req := createUploadRequest(t, validOperations, validMap, validFiles)
-
-		resp := httptest.NewRecorder()
-		h.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-		require.Equal(t, `{"errors":[{"message":"failed to parse multipart form, request body too large"}],"data":null}`, resp.Body.String())
+		resp := upload(t, h.Handler(), validOperations, validMap, validFiles)
+		require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+		require.Equal(t, `{"errors":[{"message":"failed to parse multipart form, request body too large"}],"data":null}`, string(resp.Body()))
 	})
 }
 
@@ -276,7 +256,7 @@ type file struct {
 	contentType string
 }
 
-func createUploadRequest(t *testing.T, operations, mapData string, files []file) *http.Request {
+func upload(t *testing.T, handler fasthttp.RequestHandler, operations, mapData string, files []file) *fasthttp.Response {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -298,9 +278,18 @@ func createUploadRequest(t *testing.T, operations, mapData string, files []file)
 	err = bodyWriter.Close()
 	require.NoError(t, err)
 
-	req, err := http.NewRequest("POST", "/graphql", bodyBuf)
-	require.NoError(t, err)
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
 
-	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
-	return req
+	req.Header.SetMethod("POST")
+	req.SetRequestURI("/graphql")
+	req.SetBodyStream(bodyBuf, bodyBuf.Len())
+	req.Header.SetContentType(bodyWriter.FormDataContentType())
+
+	var fctx fasthttp.RequestCtx
+	fctx.Init(req, nil, nil)
+
+	handler(&fctx)
+
+	return &fctx.Response
 }

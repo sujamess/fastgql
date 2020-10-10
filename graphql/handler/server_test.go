@@ -3,7 +3,6 @@ package handler_test
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
@@ -21,28 +21,30 @@ func TestServer(t *testing.T) {
 	srv := testserver.New()
 	srv.AddTransport(&transport.GET{})
 
+	h := srv.Handler()
+
 	t.Run("returns an error if no transport matches", func(t *testing.T) {
-		resp := post(srv, "/foo", "application/json")
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.Equal(t, `{"errors":[{"message":"transport not supported"}],"data":null}`, resp.Body.String())
+		resp := post(h, "/foo", "application/json")
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode())
+		assert.Equal(t, `{"errors":[{"message":"transport not supported"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("calls query on executable schema", func(t *testing.T) {
-		resp := get(srv, "/foo?query={name}")
-		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.Equal(t, `{"data":{"name":"test"}}`, resp.Body.String())
+		resp := get(h, "/foo?query={name}")
+		assert.Equal(t, http.StatusOK, resp.StatusCode())
+		assert.Equal(t, `{"data":{"name":"test"}}`, string(resp.Body()))
 	})
 
 	t.Run("mutations are forbidden", func(t *testing.T) {
-		resp := get(srv, "/foo?query=mutation{name}")
-		assert.Equal(t, http.StatusNotAcceptable, resp.Code)
-		assert.Equal(t, `{"errors":[{"message":"GET requests only allow query operations"}],"data":null}`, resp.Body.String())
+		resp := get(h, "/foo?query=mutation{name}")
+		assert.Equal(t, http.StatusNotAcceptable, resp.StatusCode())
+		assert.Equal(t, `{"errors":[{"message":"GET requests only allow query operations"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("subscriptions are forbidden", func(t *testing.T) {
-		resp := get(srv, "/foo?query=subscription{name}")
-		assert.Equal(t, http.StatusNotAcceptable, resp.Code)
-		assert.Equal(t, `{"errors":[{"message":"GET requests only allow query operations"}],"data":null}`, resp.Body.String())
+		resp := get(h, "/foo?query=subscription{name}")
+		assert.Equal(t, http.StatusNotAcceptable, resp.StatusCode())
+		assert.Equal(t, `{"errors":[{"message":"GET requests only allow query operations"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("invokes operation middleware in order", func(t *testing.T) {
@@ -56,8 +58,8 @@ func TestServer(t *testing.T) {
 			return next(ctx)
 		})
 
-		resp := get(srv, "/foo?query={name}")
-		assert.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+		resp := get(h, "/foo?query={name}")
+		assert.Equal(t, http.StatusOK, resp.StatusCode(), string(resp.Body()))
 		assert.Equal(t, []string{"first", "second"}, calls)
 	})
 
@@ -72,8 +74,8 @@ func TestServer(t *testing.T) {
 			return next(ctx)
 		})
 
-		resp := get(srv, "/foo?query={name}")
-		assert.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+		resp := get(h, "/foo?query={name}")
+		assert.Equal(t, http.StatusOK, resp.StatusCode(), string(resp.Body()))
 		assert.Equal(t, []string{"first", "second"}, calls)
 	})
 
@@ -88,8 +90,8 @@ func TestServer(t *testing.T) {
 			return next(ctx)
 		})
 
-		resp := get(srv, "/foo?query={name}")
-		assert.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+		resp := get(h, "/foo?query={name}")
+		assert.Equal(t, http.StatusOK, resp.StatusCode(), string(resp.Body()))
 		assert.Equal(t, []string{"first", "second"}, calls)
 	})
 
@@ -103,8 +105,8 @@ func TestServer(t *testing.T) {
 			return resp
 		})
 
-		resp := get(srv, "/foo?query=invalid")
-		assert.Equal(t, http.StatusUnprocessableEntity, resp.Code, resp.Body.String())
+		resp := get(h, "/foo?query=invalid")
+		assert.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
 		assert.Equal(t, 1, len(errors1))
 		assert.Equal(t, 1, len(errors2))
 	})
@@ -116,9 +118,9 @@ func TestServer(t *testing.T) {
 		qry := `query Foo {name}`
 
 		t.Run("cache miss populates cache", func(t *testing.T) {
-			resp := get(srv, "/foo?query="+url.QueryEscape(qry))
-			assert.Equal(t, http.StatusOK, resp.Code)
-			assert.Equal(t, `{"data":{"name":"test"}}`, resp.Body.String())
+			resp := get(h, "/foo?query="+url.QueryEscape(qry))
+			assert.Equal(t, http.StatusOK, resp.StatusCode())
+			assert.Equal(t, `{"data":{"name":"test"}}`, string(resp.Body()))
 
 			cacheDoc, ok := cache.Get(ctx, qry)
 			require.True(t, ok)
@@ -130,9 +132,9 @@ func TestServer(t *testing.T) {
 			require.Nil(t, err)
 			cache.Add(ctx, qry, doc)
 
-			resp := get(srv, "/foo?query="+url.QueryEscape(qry))
-			assert.Equal(t, http.StatusOK, resp.Code)
-			assert.Equal(t, `{"data":{"name":"test"}}`, resp.Body.String())
+			resp := get(h, "/foo?query="+url.QueryEscape(qry))
+			assert.Equal(t, http.StatusOK, resp.StatusCode())
+			assert.Equal(t, `{"data":{"name":"test"}}`, string(resp.Body()))
 
 			cacheDoc, ok := cache.Get(ctx, qry)
 			require.True(t, ok)
@@ -145,6 +147,8 @@ func TestErrorServer(t *testing.T) {
 	srv := testserver.NewError()
 	srv.AddTransport(&transport.GET{})
 
+	h := srv.Handler()
+
 	t.Run("get resolver error in AroundResponses", func(t *testing.T) {
 		var errors1 gqlerror.List
 		var errors2 gqlerror.List
@@ -155,26 +159,40 @@ func TestErrorServer(t *testing.T) {
 			return resp
 		})
 
-		resp := get(srv, "/foo?query={name}")
-		assert.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+		resp := get(h, "/foo?query={name}")
+		assert.Equal(t, http.StatusOK, resp.StatusCode(), string(resp.Body()))
 		assert.Equal(t, 1, len(errors1))
 		assert.Equal(t, 1, len(errors2))
 	})
 }
 
-func get(handler http.Handler, target string) *httptest.ResponseRecorder {
-	r := httptest.NewRequest("GET", target, nil)
-	w := httptest.NewRecorder()
+func get(handler fasthttp.RequestHandler, target string) *fasthttp.Response {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
 
-	handler.ServeHTTP(w, r)
-	return w
+	req.SetRequestURI(target)
+	req.Header.SetMethod("GET")
+
+	var fctx fasthttp.RequestCtx
+	fctx.Init(req, nil, nil)
+
+	handler(&fctx)
+
+	return &fctx.Response
 }
 
-func post(handler http.Handler, target, contentType string) *httptest.ResponseRecorder {
-	r := httptest.NewRequest("POST", target, nil)
-	r.Header.Set("Content-Type", contentType)
-	w := httptest.NewRecorder()
+func post(handler fasthttp.RequestHandler, target, contentType string) *fasthttp.Response {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
 
-	handler.ServeHTTP(w, r)
-	return w
+	req.SetRequestURI(target)
+	req.Header.SetMethod("POST")
+	req.Header.SetContentType(contentType)
+
+	var fctx fasthttp.RequestCtx
+	fctx.Init(req, nil, nil)
+
+	handler(&fctx)
+
+	return &fctx.Response
 }

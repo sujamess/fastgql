@@ -37,7 +37,7 @@ func TestPanics(t *testing.T) {
 		}
 	})
 
-	c := client.New(srv)
+	c := client.New(srv.Handler())
 
 	t.Run("panics in marshallers will not kill server", func(t *testing.T) {
 		var resp interface{}

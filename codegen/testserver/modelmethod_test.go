@@ -18,9 +18,7 @@ func TestModelMethods(t *testing.T) {
 		return true, nil
 	}
 
-	c := client.New(handler.NewDefaultServer(
-		NewExecutableSchema(Config{Resolvers: resolver}),
-	))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolver})).Handler())
 	t.Run("without context", func(t *testing.T) {
 		var resp struct {
 			ModelMethods struct {

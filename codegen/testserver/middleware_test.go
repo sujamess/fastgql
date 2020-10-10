@@ -56,7 +56,7 @@ func TestMiddleware(t *testing.T) {
 		return next(ctx)
 	})
 
-	c := client.New(srv)
+	c := client.New(srv.Handler())
 
 	var resp struct {
 		User struct {

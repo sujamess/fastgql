@@ -6,23 +6,23 @@ import (
 	"github.com/99designs/gqlgen/example/selection"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gofiber/fiber/v2"
+	"github.com/valyala/fasthttp"
 )
 
 func main() {
-	app := fiber.New()
 	playground := playground.Handler("Selection Demo", "/query")
 	gqlHandler := handler.NewDefaultServer(selection.NewExecutableSchema(selection.Config{Resolvers: &selection.Resolver{}})).Handler()
 
-	app.All("/query", func(c *fiber.Ctx) error {
-		gqlHandler(c.Context())
-		return nil
-	})
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
 
-	app.All("/", func(c *fiber.Ctx) error {
-		playground(c.Context())
-		return nil
-	})
-
-	log.Fatal(app.Listen(":8086"))
+	log.Fatal(fasthttp.ListenAndServe(":8086", h))
 }

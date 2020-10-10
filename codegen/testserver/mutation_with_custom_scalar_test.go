@@ -15,7 +15,7 @@ func TestErrorInsideMutationArgument(t *testing.T) {
 		return "Hello world", nil
 	}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	t.Run("mutation with correct input doesn't return error", func(t *testing.T) {
 		var resp map[string]interface{}

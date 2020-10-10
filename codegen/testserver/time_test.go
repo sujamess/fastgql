@@ -13,7 +13,7 @@ import (
 func TestTime(t *testing.T) {
 	resolvers := &Stub{}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	resolvers.QueryResolver.User = func(ctx context.Context, id int) (user *User, e error) {
 		return &User{}, nil

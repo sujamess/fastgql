@@ -2,7 +2,6 @@ package extension_test
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -10,6 +9,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/testserver"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/stretchr/testify/require"
+	"github.com/valyala/fasthttp"
 )
 
 func TestAPQIntegration(t *testing.T) {
@@ -23,9 +23,9 @@ func TestAPQIntegration(t *testing.T) {
 		return next(ctx)
 	})
 
-	resp := doRequest(h, "POST", "/graphql", `{"query":"{ name }","extensions":{"persistedQuery":{"version":1,"sha256Hash":"30166fc3298853f22709fce1e4a00e98f1b6a3160eaaaf9cb3b7db6a16073b07"}}}`)
-	require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
-	require.Equal(t, `{"data":{"name":"test"}}`, resp.Body.String())
+	resp := doRequest(h.Handler(), "POST", "/graphql", `{"query":"{ name }","extensions":{"persistedQuery":{"version":1,"sha256Hash":"30166fc3298853f22709fce1e4a00e98f1b6a3160eaaaf9cb3b7db6a16073b07"}}}`)
+	require.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
+	require.Equal(t, `{"data":{"name":"test"}}`, string(resp.Body()))
 
 	require.NotNil(t, stats)
 	require.True(t, stats.SentQuery)

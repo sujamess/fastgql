@@ -12,7 +12,7 @@ import (
 func TestDefaultScalarImplementation(t *testing.T) {
 	resolvers := &Stub{}
 
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers})).Handler())
 
 	resolvers.QueryResolver.DefaultScalar = func(ctx context.Context, arg string) (i string, e error) {
 		return arg, nil

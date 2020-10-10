@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/valyala/fasthttp"
 
 	extension "github.com/99designs/gqlgen/example/type-system-extension"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -19,8 +19,8 @@ func main() {
 		port = defaultPort
 	}
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", handler.NewDefaultServer(
+	playground := playground.Handler("GraphQL playground", "/query")
+	gqlHandler := handler.NewDefaultServer(
 		extension.NewExecutableSchema(
 			extension.Config{
 				Resolvers: extension.NewRootResolver(),
@@ -34,8 +34,19 @@ func main() {
 				},
 			},
 		),
-	))
+	).Handler()
+
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(fasthttp.ListenAndServe(":"+port, h))
 }

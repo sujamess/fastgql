@@ -1,6 +1,10 @@
 package client
 
-import "net/http"
+import (
+	"encoding/base64"
+
+	"github.com/valyala/fasthttp"
+)
 
 // Var adds a variable into the outgoing request
 func Var(name string, value interface{}) Option {
@@ -24,7 +28,7 @@ func Operation(name string) Option {
 // and need to specify the url to the graphql endpoint.
 func Path(url string) Option {
 	return func(bd *Request) {
-		bd.HTTP.URL.Path = url
+		bd.HTTP.SetRequestURI(url)
 	}
 }
 
@@ -38,13 +42,22 @@ func AddHeader(key string, value string) Option {
 // BasicAuth authenticates the request using http basic auth.
 func BasicAuth(username, password string) Option {
 	return func(bd *Request) {
-		bd.HTTP.SetBasicAuth(username, password)
+		SetBasicAuth(bd.HTTP, username, password)
 	}
 }
 
 // AddCookie adds a cookie to the outgoing request
-func AddCookie(cookie *http.Cookie) Option {
+func AddCookie(key, value string) Option {
 	return func(bd *Request) {
-		bd.HTTP.AddCookie(cookie)
+		bd.HTTP.Header.SetCookie(key, value)
 	}
+}
+
+func SetBasicAuth(req *fasthttp.Request, username, password string) {
+	req.Header.Set("Authorization", "Basic "+basicAuth(username, password))
+}
+
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }

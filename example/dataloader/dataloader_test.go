@@ -10,7 +10,8 @@ import (
 )
 
 func TestTodo(t *testing.T) {
-	c := client.New(LoaderMiddleware(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: &Resolver{}}))))
+	srv := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: &Resolver{}})).Handler()
+	c := client.New(LoaderMiddleware(srv))
 
 	t.Run("create a new todo", func(t *testing.T) {
 		var resp interface{}

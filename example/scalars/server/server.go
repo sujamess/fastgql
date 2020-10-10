@@ -6,23 +6,23 @@ import (
 	"github.com/99designs/gqlgen/example/scalars"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gofiber/fiber/v2"
+	"github.com/valyala/fasthttp"
 )
 
 func main() {
-	app := fiber.New()
 	playground := playground.Handler("Starwars", "/query")
 	gqlHandler := handler.NewDefaultServer(scalars.NewExecutableSchema(scalars.Config{Resolvers: &scalars.Resolver{}})).Handler()
 
-	app.All("/query", func(c *fiber.Ctx) error {
-		gqlHandler(c.Context())
-		return nil
-	})
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
 
-	app.All("/", func(c *fiber.Ctx) error {
-		playground(c.Context())
-		return nil
-	})
-
-	log.Fatal(app.Listen(":8084"))
+	log.Fatal(fasthttp.ListenAndServe(":8084", h))
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func TestSelection(t *testing.T) {
-	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: &Resolver{}})))
+	c := client.New(handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: &Resolver{}})).Handler())
 
 	query := `{
 			events {

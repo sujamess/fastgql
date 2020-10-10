@@ -12,7 +12,7 @@ import (
 func TestInput(t *testing.T) {
 	resolvers := &Stub{}
 	srv := handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: resolvers}))
-	c := client.New(srv)
+	c := client.New(srv.Handler())
 
 	t.Run("when function errors on directives", func(t *testing.T) {
 		resolvers.QueryResolver.InputSlice = func(ctx context.Context, arg []string) (b bool, e error) {

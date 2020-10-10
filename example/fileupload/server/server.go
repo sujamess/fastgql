@@ -8,7 +8,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/gofiber/fiber/v2"
+	"github.com/valyala/fasthttp"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 
@@ -19,11 +19,7 @@ import (
 )
 
 func main() {
-	app := fiber.New()
-	playground := playground.Handler("File Upload Demo", "/query")
-
 	resolver := getResolver()
-
 	var mb int64 = 1 << 20
 
 	srv := handler.NewDefaultServer(fileupload.NewExecutableSchema(fileupload.Config{Resolvers: resolver}))
@@ -34,19 +30,22 @@ func main() {
 	})
 	srv.Use(extension.Introspection{})
 
+	playground := playground.Handler("File Upload Demo", "/query")
 	gqlHandler := srv.Handler()
-	app.All("/query", func(c *fiber.Ctx) error {
-		gqlHandler(c.Context())
-		return nil
-	})
 
-	app.All("/", func(c *fiber.Ctx) error {
-		playground(c.Context())
-		return nil
-	})
+	h := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/query":
+			gqlHandler(ctx)
+		case "/":
+			playground(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
 
 	log.Print("connect to http://localhost:8087/ for GraphQL playground")
-	log.Fatal(app.Listen(":8087"))
+	log.Fatal(fasthttp.ListenAndServe(":8087", h))
 }
 
 func getResolver() *fileupload.Stub {
