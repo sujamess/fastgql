@@ -16,7 +16,7 @@ func TestOptions(t *testing.T) {
 	t.Run("responds to options requests", func(t *testing.T) {
 		resp := doRequest(h.Handler(), "OPTIONS", "/graphql?query={me{name}}", ``)
 		assert.Equal(t, fasthttp.StatusOK, resp.StatusCode())
-		assert.Equal(t, "OPTIONS, GET, POST", resp.Header.Peek("Allow"))
+		assert.Equal(t, "OPTIONS, GET, POST", string(resp.Header.Peek("Allow")))
 	})
 
 	t.Run("responds to head requests", func(t *testing.T) {

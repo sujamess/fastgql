@@ -21,7 +21,7 @@ func TestGET(t *testing.T) {
 
 	t.Run("has json content-type header", func(t *testing.T) {
 		resp := doRequest(h.Handler(), "GET", "/graphql?query={name}", ``)
-		assert.Equal(t, "application/json", resp.Header.ContentType())
+		assert.Equal(t, "application/json", string(resp.Header.ContentType()))
 	})
 
 	t.Run("decode failure", func(t *testing.T) {

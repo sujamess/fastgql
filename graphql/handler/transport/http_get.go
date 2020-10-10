@@ -27,6 +27,8 @@ func (h GET) Supports(ctx *fasthttp.RequestCtx) bool {
 }
 
 func (h GET) Do(ctx *fasthttp.RequestCtx, exec graphql.GraphExecutor) {
+	ctx.Response.Header.SetContentType("application/json")
+
 	raw := &graphql.RawParams{
 		Query:         string(ctx.QueryArgs().Peek("query")),
 		OperationName: string(ctx.QueryArgs().Peek("operationName")),

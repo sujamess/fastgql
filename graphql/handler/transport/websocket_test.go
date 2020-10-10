@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net"
 	"strings"
 	"testing"
 	"time"
@@ -17,7 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/fasthttputil"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -28,16 +29,8 @@ func TestWebsocket(t *testing.T) {
 	handler := testserver.New()
 	handler.AddTransport(transport.Websocket{})
 
-	srv := &fasthttp.Server{
-		Handler: handler.Handler(),
-	}
-	ln := fasthttputil.NewInmemoryListener()
+	ln := startServerOnPort(t, 1234, handler.Handler())
 	defer ln.Close()
-	go func() {
-		if err := srv.Serve(ln); err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-	}()
 
 	url := ln.Addr().String()
 
@@ -152,21 +145,13 @@ func TestWebsocket(t *testing.T) {
 
 func TestWebsocketWithKeepAlive(t *testing.T) {
 
-	h := testserver.New()
-	h.AddTransport(transport.Websocket{
+	handler := testserver.New()
+	handler.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 100 * time.Millisecond,
 	})
 
-	srv := &fasthttp.Server{
-		Handler: h.Handler(),
-	}
-	ln := fasthttputil.NewInmemoryListener()
+	ln := startServerOnPort(t, 1234, handler.Handler())
 	defer ln.Close()
-	go func() {
-		if err := srv.Serve(ln); err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-	}()
 
 	url := ln.Addr().String()
 
@@ -188,7 +173,7 @@ func TestWebsocketWithKeepAlive(t *testing.T) {
 	assert.Equal(t, connectionKeepAliveMsg, msg.Type)
 
 	// server message
-	h.SendNextSubscriptionMessage()
+	handler.SendNextSubscriptionMessage()
 	msg = readOp(c)
 	assert.Equal(t, dataMsg, msg.Type)
 
@@ -199,19 +184,11 @@ func TestWebsocketWithKeepAlive(t *testing.T) {
 
 func TestWebsocketInitFunc(t *testing.T) {
 	t.Run("accept connection if WebsocketInitFunc is NOT provided", func(t *testing.T) {
-		h := testserver.New()
-		h.AddTransport(transport.Websocket{})
+		handler := testserver.New()
+		handler.AddTransport(transport.Websocket{})
 
-		srv := &fasthttp.Server{
-			Handler: h.Handler(),
-		}
-		ln := fasthttputil.NewInmemoryListener()
+		ln := startServerOnPort(t, 1234, handler.Handler())
 		defer ln.Close()
-		go func() {
-			if err := srv.Serve(ln); err != nil {
-				t.Errorf("unexpected error: %s", err)
-			}
-		}()
 
 		url := ln.Addr().String()
 
@@ -225,24 +202,16 @@ func TestWebsocketInitFunc(t *testing.T) {
 	})
 
 	t.Run("accept connection if WebsocketInitFunc is provided and is accepting connection", func(t *testing.T) {
-		h := testserver.New()
-		h.AddTransport(transport.Websocket{
+		handler := testserver.New()
+		handler.AddTransport(transport.Websocket{
 			InitFunc: func(ctx *fasthttp.RequestCtx, initPayload transport.InitPayload) (*fasthttp.RequestCtx, error) {
 				ctx.SetUserValue("newkey", "newvalue")
 				return ctx, nil
 			},
 		})
 
-		srv := &fasthttp.Server{
-			Handler: h.Handler(),
-		}
-		ln := fasthttputil.NewInmemoryListener()
+		ln := startServerOnPort(t, 1234, handler.Handler())
 		defer ln.Close()
-		go func() {
-			if err := srv.Serve(ln); err != nil {
-				t.Errorf("unexpected error: %s", err)
-			}
-		}()
 
 		url := ln.Addr().String()
 
@@ -256,23 +225,15 @@ func TestWebsocketInitFunc(t *testing.T) {
 	})
 
 	t.Run("reject connection if WebsocketInitFunc is provided and is accepting connection", func(t *testing.T) {
-		h := testserver.New()
-		h.AddTransport(transport.Websocket{
+		handler := testserver.New()
+		handler.AddTransport(transport.Websocket{
 			InitFunc: func(ctx *fasthttp.RequestCtx, initPayload transport.InitPayload) (*fasthttp.RequestCtx, error) {
 				return ctx, errors.New("invalid init payload")
 			},
 		})
 
-		srv := &fasthttp.Server{
-			Handler: h.Handler(),
-		}
-		ln := fasthttputil.NewInmemoryListener()
+		ln := startServerOnPort(t, 1234, handler.Handler())
 		defer ln.Close()
-		go func() {
-			if err := srv.Serve(ln); err != nil {
-				t.Errorf("unexpected error: %s", err)
-			}
-		}()
 
 		url := ln.Addr().String()
 
@@ -323,8 +284,22 @@ func TestWebsocketInitFunc(t *testing.T) {
 	})
 }
 
+func startServerOnPort(t *testing.T, port int, h fasthttp.RequestHandler) net.Listener {
+	ln, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	if err != nil {
+		t.Fatalf("cannot start tcp server on port %d: %s", port, err)
+	}
+	go fasthttp.Serve(ln, h)
+	return ln
+}
+
 func wsConnect(url string) *websocket.Conn {
-	c, resp, err := websocket.DefaultDialer.Dial(strings.Replace(url, "http://", "ws://", -1), nil)
+	url = strings.Replace(url, "http://", "ws://", -1)
+	if !strings.HasPrefix(url, "ws://") {
+		url = "ws://" + url
+	}
+
+	c, resp, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		panic(err)
 	}

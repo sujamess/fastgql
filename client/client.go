@@ -3,10 +3,8 @@
 package client
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/valyala/fasthttp"
@@ -106,16 +104,17 @@ func (p *Client) RawPost(query string, options ...Option) (*Response, error) {
 }
 
 func (p *Client) newRequest(query string, options ...Option) (*fasthttp.Request, error) {
-	bd := &Request{
-		Query: query,
-		// HTTP:  httptest.NewRequest(http.MethodPost, "/", nil),
-	}
 	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
+	// defer fasthttp.ReleaseRequest(req)
 
 	req.SetRequestURI("/")
 	req.Header.SetMethod("POST")
 	req.Header.SetContentType("application/json")
+
+	bd := &Request{
+		Query: query,
+		HTTP:  req,
+	}
 
 	// per client options from client.New apply first
 	for _, option := range p.opts {
@@ -133,7 +132,7 @@ func (p *Client) newRequest(query string, options ...Option) (*fasthttp.Request,
 		if err != nil {
 			return nil, fmt.Errorf("encode: %s", err.Error())
 		}
-		bd.HTTP.SetBodyStream(ioutil.NopCloser(bytes.NewBuffer(requestBody)), len(requestBody))
+		bd.HTTP.SetBody(requestBody)
 	default:
 		panic("unsupported encoding" + ct)
 	}

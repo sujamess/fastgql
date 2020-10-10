@@ -184,17 +184,6 @@ func TestFileUpload(t *testing.T) {
 		})
 	})
 
-	validOperations := `{ "query": "mutation ($file: Upload!) { singleUpload(file: $file) }", "variables": { "file": null } }`
-	validMap := `{ "0": ["variables.file"] }`
-	validFiles := []file{
-		{
-			mapKey:      "0",
-			name:        "a.txt",
-			content:     "test1",
-			contentType: "text/plain",
-		},
-	}
-
 	t.Run("failed to parse multipart", func(t *testing.T) {
 		req := fasthttp.AcquireRequest()
 		defer fasthttp.ReleaseRequest(req)
@@ -212,6 +201,17 @@ func TestFileUpload(t *testing.T) {
 		require.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
 		require.Equal(t, `{"errors":[{"message":"failed to parse multipart form"}],"data":null}`, string(resp.Body()))
 	})
+
+	validOperations := `{ "query": "mutation ($file: Upload!) { singleUpload(file: $file) }", "variables": { "file": null } }`
+	validMap := `{ "0": ["variables.file"] }`
+	validFiles := []file{
+		{
+			mapKey:      "0",
+			name:        "a.txt",
+			content:     "test1",
+			contentType: "text/plain",
+		},
+	}
 
 	t.Run("fail parse operation", func(t *testing.T) {
 		operations := `invalid operation`
@@ -283,7 +283,8 @@ func upload(t *testing.T, handler fasthttp.RequestHandler, operations, mapData s
 
 	req.Header.SetMethod("POST")
 	req.SetRequestURI("/graphql")
-	req.SetBodyStream(bodyBuf, bodyBuf.Len())
+	req.SetBody(bodyBuf.Bytes())
+	req.Header.SetContentLength(bodyBuf.Len())
 	req.Header.SetContentType(bodyWriter.FormDataContentType())
 
 	var fctx fasthttp.RequestCtx

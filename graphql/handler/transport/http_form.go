@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -65,7 +64,7 @@ func (f MultipartForm) Do(ctx *fasthttp.RequestCtx, exec graphql.GraphExecutor) 
 		writeJsonError(ctx, "failed to parse multipart form, request body too large")
 		return
 	}
-	ctx.Request.ReadLimitBody(bufio.NewReader(bytes.NewReader(ctx.Request.Body())), int(f.maxUploadSize()))
+
 	if _, err = ctx.MultipartForm(); err != nil {
 		ctx.Response.Header.SetStatusCode(fasthttp.StatusUnprocessableEntity)
 		if strings.Contains(err.Error(), "request body too large") {

@@ -2,7 +2,6 @@ package transport_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/99designs/gqlgen/graphql/handler/testserver"
@@ -24,35 +23,35 @@ func TestPOST(t *testing.T) {
 	t.Run("decode failure", func(t *testing.T) {
 		resp := doRequest(h.Handler(), "POST", "/graphql", "notjson")
 		assert.Equal(t, fasthttp.StatusBadRequest, resp.StatusCode(), string(resp.Body()))
-		assert.Equal(t, resp.Header.ContentType(), "application/json")
+		assert.Equal(t, string(resp.Header.ContentType()), "application/json")
 		assert.Equal(t, `{"errors":[{"message":"json body could not be decoded: invalid character 'o' in literal null (expecting 'u')"}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("parse failure", func(t *testing.T) {
 		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query": "!"}`)
 		assert.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
-		assert.Equal(t, resp.Header.ContentType(), "application/json")
+		assert.Equal(t, string(resp.Header.ContentType()), "application/json")
 		assert.Equal(t, `{"errors":[{"message":"Unexpected !","locations":[{"line":1,"column":1}],"extensions":{"code":"GRAPHQL_PARSE_FAILED"}}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("validation failure", func(t *testing.T) {
 		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query": "{ title }"}`)
 		assert.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
-		assert.Equal(t, resp.Header.ContentType(), "application/json")
+		assert.Equal(t, string(resp.Header.ContentType()), "application/json")
 		assert.Equal(t, `{"errors":[{"message":"Cannot query field \"title\" on type \"Query\".","locations":[{"line":1,"column":3}],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"}}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("invalid variable", func(t *testing.T) {
 		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query": "query($id:Int!){find(id:$id)}","variables":{"id":false}}`)
 		assert.Equal(t, fasthttp.StatusUnprocessableEntity, resp.StatusCode(), string(resp.Body()))
-		assert.Equal(t, resp.Header.ContentType(), "application/json")
+		assert.Equal(t, string(resp.Header.ContentType()), "application/json")
 		assert.Equal(t, `{"errors":[{"message":"cannot use bool as Int","path":["variable","id"],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"}}],"data":null}`, string(resp.Body()))
 	})
 
 	t.Run("execution failure", func(t *testing.T) {
 		resp := doRequest(h.Handler(), "POST", "/graphql", `{"query": "mutation { name }"}`)
 		assert.Equal(t, fasthttp.StatusOK, resp.StatusCode(), string(resp.Body()))
-		assert.Equal(t, resp.Header.ContentType(), "application/json")
+		assert.Equal(t, string(resp.Header.ContentType()), "application/json")
 		assert.Equal(t, `{"errors":[{"message":"mutations are not supported"}],"data":null}`, string(resp.Body()))
 	})
 
@@ -63,7 +62,7 @@ func TestPOST(t *testing.T) {
 
 			req.SetRequestURI(target)
 			req.Header.SetMethod(method)
-			req.SetBodyStream(strings.NewReader(body), len(body))
+			req.SetBody([]byte(body))
 			if contentType != "" {
 				req.Header.SetContentType(contentType)
 			}
@@ -115,7 +114,7 @@ func doRequest(handler fasthttp.RequestHandler, method string, target string, bo
 	req.SetRequestURI(target)
 	req.Header.SetMethod(method)
 	req.Header.SetContentType("application/json")
-	req.SetBodyStream(strings.NewReader(body), len(body))
+	req.SetBody([]byte(body))
 
 	var fctx fasthttp.RequestCtx
 	fctx.Init(req, nil, nil)

@@ -3,12 +3,12 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
 	"github.com/fasthttp/websocket"
 	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/fasthttputil"
 )
 
 const (
@@ -62,28 +62,21 @@ func (p *Client) WebsocketWithPayload(query string, initPayload map[string]inter
 		return errorSubscription(fmt.Errorf("parse body: %s", err.Error()))
 	}
 
-	srv := &fasthttp.Server{
-		Handler: p.h,
-	}
-	ln := fasthttputil.NewInmemoryListener()
+	ln := startServerOnPort(1234, p.h)
 	defer ln.Close()
-	go func() {
-		if err := srv.Serve(ln); err != nil {
-			panic(fmt.Errorf("unexpected error: %v", err))
-		}
-	}()
 
 	url := ln.Addr().String()
+	url = strings.Replace(url, "http://", "ws://", -1)
+	if !strings.HasPrefix(url, "ws://") {
+		url = "ws://" + url
+	}
 
-	host := strings.Replace(url, "http://", "ws://", -1)
-
-	var headers http.Header
+	headers := make(http.Header)
 	r.Header.VisitAll(func(key, value []byte) {
 		headers.Add(string(key), string(value))
 	})
 
-	c, _, err := websocket.DefaultDialer.Dial(host+r.URI().String(), headers)
-
+	c, _, err := websocket.DefaultDialer.Dial(url, headers)
 	if err != nil {
 		return errorSubscription(fmt.Errorf("dial: %s", err.Error()))
 	}
@@ -156,4 +149,13 @@ func (p *Client) WebsocketWithPayload(query string, initPayload map[string]inter
 			return unpackErr
 		},
 	}
+}
+
+func startServerOnPort(port int, h fasthttp.RequestHandler) net.Listener {
+	ln, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	if err != nil {
+		panic(fmt.Errorf("cannot start tcp server on port %d: %s", port, err))
+	}
+	go fasthttp.Serve(ln, h)
+	return ln
 }

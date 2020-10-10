@@ -2,7 +2,6 @@ package extension_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -103,7 +102,7 @@ func doRequest(handler fasthttp.RequestHandler, method string, target string, bo
 	req.SetRequestURI(target)
 	req.Header.SetMethod(method)
 	req.Header.SetContentType("application/json")
-	req.SetBodyStream(strings.NewReader(body), len(body))
+	req.SetBody([]byte(body))
 
 	var fctx fasthttp.RequestCtx
 	fctx.Init(req, nil, nil)
