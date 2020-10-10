@@ -73,16 +73,16 @@ func main() {
   app := fiber.New()
 
   srv := handler.NewDefaultServer(generated.NewExecutableSchema(gql.NewResolver()))
-	serverHandler := srv.Handler()
-  playgroundHandler := playground.Handler("GraphQL playground", "/query")
+	gqlHandler := srv.Handler()
+  playground := playground.Handler("GraphQL playground", "/query")
 
   app.All("/query", func(c *fiber.Ctx) error {
-    serverHandler(c.Context())
+    gqlHandler(c.Context())
     return nil
   })
 
   app.All("/playground", func(c *fiber.Ctx) error {
-    playgroundHandler(c.Context())
+    playground(c.Context())
     return nil
   })
 
