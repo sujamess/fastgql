@@ -1,10 +1,12 @@
-# gqlgen with fasthttp
+# fastgql
 
 ![gqlgen](https://user-images.githubusercontent.com/46195831/89802919-0bb8ef00-db2a-11ea-8ba4-88e7a58b2fd2.png)
 
-## What is gqlgen?
+## What is fastgql?
 
-[gqlgen](https://github.com/arsmn/fastgql) is a Go library for building GraphQL servers without any fuss.<br/> 
+[gqlgen](https://github.com/99designs/gqlgen) is a Go library for building GraphQL servers without any fuss.<br/>
+[fastgql](https://github.com/arsmn/fastgql) This fork adds [fasthttp](https://github.com/valyala/fasthttp) support to the latest version of [gqlgen](https://github.com/99designs/gqlgen).<br/>
+
 
 - **gqlgen is based on a Schema first approach** — You get to Define your API using the GraphQL [Schema Definition Language](http://graphql.org/learn/schema/).
 - **gqlgen prioritizes Type safety** — You should never see `map[string]interface{}` here.
@@ -14,12 +16,13 @@ Still not convinced enough to use **gqlgen**? Compare **gqlgen** with other Go g
 
 ## Getting Started
 - To install gqlgen run the command `go get github.com/arsmn/fastgql` in your project directory.<br/> 
-- Add this line to your go mod file `replace github.com/arsmn/fastgql v0.13.0 => github.com/arsmn/gqlgen v0.13.2`
 - You could initialize a new project using the recommended folder structure by running this command `go run github.com/arsmn/fastgql init`.
 
 First work your way through the [Getting Started](https://gqlgen.com/getting-started/) tutorial.
 
-If you can't find what your looking for, look at our [examples](https://github.com/arsmn/gqlgen/tree/master/example) for example usage of gqlgen, or visit [godoc](https://godoc.org/github.com/arsmn/gqlgen).
+If you can't find what your looking for, look at our [examples](https://github.com/arsmn/fastgql/tree/master/example) for example usage of gqlgen, or visit [godoc](https://godoc.org/github.com/99designs/gqlgen).
+
+Don't forget to replace `go run github.com/99designs/gqlgen` with `go run github.com/arsmn/fastgql` when you are using doc commands!
 
 ## Using with Fasthttp
 
@@ -29,11 +32,11 @@ package main
 import (
   "log"
   "github.com/valyala/fasthttp"
-  "github.com/arsmn/gqlgen"
+  "github.com/arsmn/fastgql"
   "<Your go module>/gql"
   "<Your go module>/generated"
-  "github.com/arsmn/gqlgen/graphql/handler"
-  "github.com/arsmn/gqlgen/graphql/playground"
+  "github.com/arsmn/fastgql/graphql/handler"
+  "github.com/arsmn/fastgql/graphql/playground"
 )
 
 func main() {
@@ -63,11 +66,11 @@ package main
 import (
   "log"
   "github.com/gofiber/fiber/v2"
-  "github.com/arsmn/gqlgen"
+  "ithub.com/arsmn/fastgql"
   "<Your go module>/gql"
   "<Your go module>/generated"
-  "github.com/arsmn/gqlgen/graphql/handler"
-  "github.com/arsmn/gqlgen/graphql/playground"
+  "ithub.com/arsmn/fastgql/graphql/handler"
+  "ithub.com/arsmn/fastgql/graphql/playground"
 )
 
 func main() {
