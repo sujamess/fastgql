@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/99designs/gqlgen/codegen"
-	"github.com/99designs/gqlgen/codegen/config"
-	"github.com/99designs/gqlgen/codegen/templates"
-	"github.com/99designs/gqlgen/internal/rewrite"
-	"github.com/99designs/gqlgen/plugin"
+	"github.com/arsmn/fastgql/codegen"
+	"github.com/arsmn/fastgql/codegen/config"
+	"github.com/arsmn/fastgql/codegen/templates"
+	"github.com/arsmn/fastgql/internal/rewrite"
+	"github.com/arsmn/fastgql/plugin"
 	"github.com/pkg/errors"
 )
 

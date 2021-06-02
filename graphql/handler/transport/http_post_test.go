@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/99designs/gqlgen/graphql/handler/testserver"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/arsmn/fastgql/graphql/handler/testserver"
+	"github.com/arsmn/fastgql/graphql/handler/transport"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
 )

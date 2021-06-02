@@ -1,4 +1,4 @@
-module github.com/99designs/gqlgen
+module github.com/arsmn/fastgql
 
 go 1.12
 

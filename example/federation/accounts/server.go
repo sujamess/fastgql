@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/99designs/gqlgen/example/federation/accounts/graph"
-	"github.com/99designs/gqlgen/example/federation/accounts/graph/generated"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/debug"
-	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/arsmn/fastgql/example/federation/accounts/graph"
+	"github.com/arsmn/fastgql/example/federation/accounts/graph/generated"
+	"github.com/arsmn/fastgql/graphql/handler"
+	"github.com/arsmn/fastgql/graphql/handler/debug"
+	"github.com/arsmn/fastgql/graphql/playground"
 	"github.com/valyala/fasthttp"
 )
 

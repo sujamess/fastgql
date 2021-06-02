@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/99designs/gqlgen/example/dataloader"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/arsmn/fastgql/example/dataloader"
+	"github.com/arsmn/fastgql/graphql/handler"
+	"github.com/arsmn/fastgql/graphql/playground"
 	"github.com/valyala/fasthttp"
 )
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/testserver"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/arsmn/fastgql/graphql"
+	"github.com/arsmn/fastgql/graphql/handler/extension"
+	"github.com/arsmn/fastgql/graphql/handler/testserver"
+	"github.com/arsmn/fastgql/graphql/handler/transport"
 	"github.com/stretchr/testify/require"
 	"github.com/valyala/fasthttp"
 )

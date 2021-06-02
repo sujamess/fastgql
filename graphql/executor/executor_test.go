@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/executor/testexecutor"
+	"github.com/arsmn/fastgql/graphql"
+	"github.com/arsmn/fastgql/graphql/executor/testexecutor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/valyala/fasthttp"

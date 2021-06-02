@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/lru"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/arsmn/fastgql/graphql"
+	"github.com/arsmn/fastgql/graphql/handler"
+	"github.com/arsmn/fastgql/graphql/handler/extension"
+	"github.com/arsmn/fastgql/graphql/handler/lru"
+	"github.com/arsmn/fastgql/graphql/handler/transport"
+	"github.com/arsmn/fastgql/graphql/playground"
 	"github.com/fasthttp/websocket"
 	"github.com/valyala/fasthttp"
 )

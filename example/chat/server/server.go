@@ -6,14 +6,14 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/arsmn/fastgql/graphql/handler/extension"
+	"github.com/arsmn/fastgql/graphql/handler/transport"
 	"github.com/valyala/fasthttp"
 
-	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/arsmn/fastgql/graphql/playground"
 
-	"github.com/99designs/gqlgen/example/chat"
-	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/arsmn/fastgql/example/chat"
+	"github.com/arsmn/fastgql/graphql/handler"
 	"github.com/fasthttp/websocket"
 	"github.com/opentracing/opentracing-go"
 	"sourcegraph.com/sourcegraph/appdash"

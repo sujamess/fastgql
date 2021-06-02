@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/99designs/gqlgen/graphql"
+	"github.com/arsmn/fastgql/graphql"
 	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )

@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/99designs/gqlgen/graphql"
+	"github.com/arsmn/fastgql/graphql"
 	"github.com/valyala/fasthttp"
 )
 

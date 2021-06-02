@@ -6,16 +6,16 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/arsmn/fastgql/graphql/handler/extension"
+	"github.com/arsmn/fastgql/graphql/handler/transport"
 	"github.com/valyala/fasthttp"
 
-	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/arsmn/fastgql/graphql/playground"
 
-	"github.com/99designs/gqlgen/example/fileupload"
-	"github.com/99designs/gqlgen/example/fileupload/model"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/arsmn/fastgql/example/fileupload"
+	"github.com/arsmn/fastgql/example/fileupload/model"
+	"github.com/arsmn/fastgql/graphql"
+	"github.com/arsmn/fastgql/graphql/handler"
 )
 
 func main() {
