@@ -66,11 +66,11 @@ package main
 import (
   "log"
   "github.com/gofiber/fiber/v2"
-  "ithub.com/arsmn/fastgql"
+  "github.com/arsmn/fastgql"
   "<Your go module>/gql"
   "<Your go module>/generated"
-  "ithub.com/arsmn/fastgql/graphql/handler"
-  "ithub.com/arsmn/fastgql/graphql/playground"
+  "github.com/arsmn/fastgql/graphql/handler"
+  "github.com/arsmn/fastgql/graphql/playground"
 )
 
 func main() {
