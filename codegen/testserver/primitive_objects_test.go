@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arsmn/fastgql/client"
-	"github.com/arsmn/fastgql/graphql/handler"
 	"github.com/stretchr/testify/assert"
+	"github.com/sujamess/fastgql/client"
+	"github.com/sujamess/fastgql/graphql/handler"
 )
 
 func TestPrimitiveObjects(t *testing.T) {

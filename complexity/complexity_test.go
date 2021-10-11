@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/arsmn/fastgql/graphql"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/graphql"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )

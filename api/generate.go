@@ -3,13 +3,13 @@ package api
 import (
 	"syscall"
 
-	"github.com/arsmn/fastgql/codegen"
-	"github.com/arsmn/fastgql/codegen/config"
-	"github.com/arsmn/fastgql/plugin"
-	"github.com/arsmn/fastgql/plugin/federation"
-	"github.com/arsmn/fastgql/plugin/modelgen"
-	"github.com/arsmn/fastgql/plugin/resolvergen"
 	"github.com/pkg/errors"
+	"github.com/sujamess/fastgql/codegen"
+	"github.com/sujamess/fastgql/codegen/config"
+	"github.com/sujamess/fastgql/plugin"
+	"github.com/sujamess/fastgql/plugin/federation"
+	"github.com/sujamess/fastgql/plugin/modelgen"
+	"github.com/sujamess/fastgql/plugin/resolvergen"
 )
 
 func Generate(cfg *config.Config, option ...Option) error {

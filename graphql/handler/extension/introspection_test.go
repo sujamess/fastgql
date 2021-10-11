@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arsmn/fastgql/graphql"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/graphql"
 )
 
 func TestIntrospection(t *testing.T) {

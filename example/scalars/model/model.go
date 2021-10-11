@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arsmn/fastgql/example/scalars/external"
-	"github.com/arsmn/fastgql/graphql"
+	"github.com/sujamess/fastgql/example/scalars/external"
+	"github.com/sujamess/fastgql/graphql"
 )
 
 type Banned bool

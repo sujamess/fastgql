@@ -8,11 +8,11 @@ import (
 
 	"github.com/valyala/fasthttp"
 
-	"github.com/arsmn/fastgql/graphql"
-	"github.com/arsmn/fastgql/graphql/handler"
-	"github.com/arsmn/fastgql/graphql/handler/extension"
-	"github.com/arsmn/fastgql/graphql/playground"
-	"github.com/arsmn/fastgql/integration"
+	"github.com/sujamess/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql/handler"
+	"github.com/sujamess/fastgql/graphql/handler/extension"
+	"github.com/sujamess/fastgql/graphql/playground"
+	"github.com/sujamess/fastgql/integration"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 

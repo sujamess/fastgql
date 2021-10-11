@@ -77,9 +77,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/arsmn/fastgql/example/starwars"
-	"github.com/arsmn/fastgql/graphql/handler"
-	"github.com/arsmn/fastgql/graphql/playground"
+	"github.com/sujamess/fastgql/example/starwars"
+	"github.com/sujamess/fastgql/graphql/handler"
+	"github.com/sujamess/fastgql/graphql/playground"
 	"github.com/go-chi/chi"
 )
 

@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/arsmn/fastgql/codegen"
-	"github.com/arsmn/fastgql/codegen/templates"
-	"github.com/arsmn/fastgql/plugin"
 	"github.com/pkg/errors"
+	"github.com/sujamess/fastgql/codegen"
+	"github.com/sujamess/fastgql/codegen/templates"
+	"github.com/sujamess/fastgql/plugin"
 )
 
 func New(filename string) plugin.Plugin {

@@ -5,9 +5,9 @@ package testserver
 import (
 	"context"
 
-	introspection1 "github.com/arsmn/fastgql/codegen/testserver/introspection"
-	invalid_packagename "github.com/arsmn/fastgql/codegen/testserver/invalid-packagename"
-	"github.com/arsmn/fastgql/codegen/testserver/otherpkg"
+	introspection1 "github.com/sujamess/fastgql/codegen/testserver/introspection"
+	invalid_packagename "github.com/sujamess/fastgql/codegen/testserver/invalid-packagename"
+	"github.com/sujamess/fastgql/codegen/testserver/otherpkg"
 )
 
 type Resolver struct{}

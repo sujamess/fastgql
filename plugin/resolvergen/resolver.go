@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/arsmn/fastgql/codegen"
-	"github.com/arsmn/fastgql/codegen/config"
-	"github.com/arsmn/fastgql/codegen/templates"
-	"github.com/arsmn/fastgql/internal/rewrite"
-	"github.com/arsmn/fastgql/plugin"
 	"github.com/pkg/errors"
+	"github.com/sujamess/fastgql/codegen"
+	"github.com/sujamess/fastgql/codegen/config"
+	"github.com/sujamess/fastgql/codegen/templates"
+	"github.com/sujamess/fastgql/internal/rewrite"
+	"github.com/sujamess/fastgql/plugin"
 )
 
 func New() plugin.Plugin {

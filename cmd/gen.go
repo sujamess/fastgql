@@ -3,9 +3,9 @@ package cmd
 import (
 	"os"
 
-	"github.com/arsmn/fastgql/api"
-	"github.com/arsmn/fastgql/codegen/config"
 	"github.com/pkg/errors"
+	"github.com/sujamess/fastgql/api"
+	"github.com/sujamess/fastgql/codegen/config"
 	"github.com/urfave/cli/v2"
 )
 

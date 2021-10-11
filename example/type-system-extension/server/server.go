@@ -4,11 +4,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/arsmn/fastgql/graphql/playground"
+	"github.com/sujamess/fastgql/graphql/playground"
 	"github.com/valyala/fasthttp"
 
-	extension "github.com/arsmn/fastgql/example/type-system-extension"
-	"github.com/arsmn/fastgql/graphql/handler"
+	extension "github.com/sujamess/fastgql/example/type-system-extension"
+	"github.com/sujamess/fastgql/graphql/handler"
 )
 
 const defaultPort = "8080"

@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arsmn/fastgql/graphql/handler/transport"
+	"github.com/sujamess/fastgql/graphql/handler/transport"
 
-	"github.com/arsmn/fastgql/client"
-	"github.com/arsmn/fastgql/graphql"
-	"github.com/arsmn/fastgql/graphql/handler"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/client"
+	"github.com/sujamess/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql/handler"
 )
 
 func TestSubscriptions(t *testing.T) {

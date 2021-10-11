@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arsmn/fastgql/graphql"
 	"github.com/mitchellh/mapstructure"
+	"github.com/sujamess/fastgql/graphql"
 )
 
 var you = &User{ID: 1, Name: "You"}

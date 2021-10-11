@@ -1,7 +1,7 @@
 package codegen
 
 import (
-	"github.com/arsmn/fastgql/codegen/templates"
+	"github.com/sujamess/fastgql/codegen/templates"
 )
 
 func GenerateCode(data *Data) error {

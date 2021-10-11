@@ -7,8 +7,8 @@ import (
 	"fmt"
 	time "time"
 
-	"github.com/arsmn/fastgql/example/scalars/external"
-	"github.com/arsmn/fastgql/example/scalars/model"
+	"github.com/sujamess/fastgql/example/scalars/external"
+	"github.com/sujamess/fastgql/example/scalars/model"
 )
 
 type Resolver struct {

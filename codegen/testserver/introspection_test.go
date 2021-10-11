@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arsmn/fastgql/client"
-	"github.com/arsmn/fastgql/graphql"
-	"github.com/arsmn/fastgql/graphql/handler"
-	"github.com/arsmn/fastgql/graphql/handler/transport"
-	"github.com/arsmn/fastgql/graphql/introspection"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/client"
+	"github.com/sujamess/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql/handler"
+	"github.com/sujamess/fastgql/graphql/handler/transport"
+	"github.com/sujamess/fastgql/graphql/introspection"
 )
 
 func TestIntrospection(t *testing.T) {

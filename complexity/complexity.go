@@ -1,7 +1,7 @@
 package complexity
 
 import (
-	"github.com/arsmn/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 

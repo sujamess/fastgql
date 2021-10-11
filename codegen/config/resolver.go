@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/arsmn/fastgql/internal/code"
+	"github.com/sujamess/fastgql/internal/code"
 )
 
 type ResolverConfig struct {

@@ -3,8 +3,8 @@ package federation
 import (
 	"testing"
 
-	"github.com/arsmn/fastgql/codegen/config"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/codegen/config"
 )
 
 func TestWithEntities(t *testing.T) {

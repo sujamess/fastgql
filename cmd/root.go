@@ -6,12 +6,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/arsmn/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql"
 	"github.com/urfave/cli/v2"
 
 	// Required since otherwise dep will prune away these unused packages before codegen has a chance to run
-	_ "github.com/arsmn/fastgql/graphql/handler"
-	_ "github.com/arsmn/fastgql/handler"
+	_ "github.com/sujamess/fastgql/graphql/handler"
+	_ "github.com/sujamess/fastgql/handler"
 )
 
 func Execute() {

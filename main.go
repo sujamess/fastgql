@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/arsmn/fastgql/cmd"
+	"github.com/sujamess/fastgql/cmd"
 )
 
 func main() {

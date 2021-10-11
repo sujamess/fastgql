@@ -10,10 +10,10 @@ resolver:
   type: Resolver
 
 autobind:
-  - "github.com/arsmn/fastgql/codegen/testserver"
-  - "github.com/arsmn/fastgql/codegen/testserver/introspection"
-  - "github.com/arsmn/fastgql/codegen/testserver/invalid-packagename"
+  - "github.com/sujamess/fastgql/codegen/testserver"
+  - "github.com/sujamess/fastgql/codegen/testserver/introspection"
+  - "github.com/sujamess/fastgql/codegen/testserver/invalid-packagename"
 
 models:
   Email:
-    model: "github.com/arsmn/fastgql/codegen/testserver.Email"
+    model: "github.com/sujamess/fastgql/codegen/testserver.Email"

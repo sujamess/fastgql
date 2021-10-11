@@ -2,8 +2,8 @@
 {{ reserveImport "log" }}
 {{ reserveImport "github.com/gofiber/fiber/v2" }}
 {{ reserveImport "os" }}
-{{ reserveImport "github.com/arsmn/fastgql/graphql/playground" }}
-{{ reserveImport "github.com/arsmn/fastgql/graphql/handler" }}
+{{ reserveImport "github.com/sujamess/fastgql/graphql/playground" }}
+{{ reserveImport "github.com/sujamess/fastgql/graphql/handler" }}
 
 const defaultPort = "8080"
 
@@ -24,7 +24,7 @@ func main() {
 		gqlHandler(c.Context())
 		return nil
 	})
-	
+
 	app.All("/", func(c *fiber.Ctx) error {
 		playground(c.Context())
 		return nil

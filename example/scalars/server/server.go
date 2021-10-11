@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/arsmn/fastgql/example/scalars"
-	"github.com/arsmn/fastgql/graphql/handler"
-	"github.com/arsmn/fastgql/graphql/playground"
+	"github.com/sujamess/fastgql/example/scalars"
+	"github.com/sujamess/fastgql/graphql/handler"
+	"github.com/sujamess/fastgql/graphql/playground"
 	"github.com/valyala/fasthttp"
 )
 
