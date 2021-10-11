@@ -1,6 +1,6 @@
-module github.com/arsmn/fastgql
+module github.com/sujamess/fastgql
 
-go 1.12
+go 1.17
 
 require (
 	github.com/agnivade/levenshtein v1.0.3 // indirect
