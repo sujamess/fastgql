@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arsmn/fastgql/client"
-	"github.com/arsmn/fastgql/graphql/handler"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/client"
+	"github.com/sujamess/fastgql/graphql/handler"
 )
 
 func TestTime(t *testing.T) {

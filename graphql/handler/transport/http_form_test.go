@@ -9,10 +9,10 @@ import (
 	"net/textproto"
 	"testing"
 
-	"github.com/arsmn/fastgql/graphql"
-	"github.com/arsmn/fastgql/graphql/handler"
-	"github.com/arsmn/fastgql/graphql/handler/transport"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql/handler"
+	"github.com/sujamess/fastgql/graphql/handler/transport"
 	"github.com/valyala/fasthttp"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"

@@ -30,3 +30,16 @@ require (
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20180110180208-2cc67fd64755
 	sourcegraph.com/sourcegraph/appdash-data v0.0.0-20151005221446-73f23eafcf67 // indirect
 )
+
+require (
+	github.com/andybalholm/brotli v1.0.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/klauspost/compress v1.10.7 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/russross/blackfriday/v2 v2.0.1 // indirect
+	github.com/savsgio/gotils v0.0.0-20200117113501-90175b0fbe3f // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
+)

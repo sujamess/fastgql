@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arsmn/fastgql/client"
-	"github.com/arsmn/fastgql/codegen/testserver/otherpkg"
-	"github.com/arsmn/fastgql/graphql/handler"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/client"
+	"github.com/sujamess/fastgql/codegen/testserver/otherpkg"
+	"github.com/sujamess/fastgql/graphql/handler"
 )
 
 func TestWrappedTypes(t *testing.T) {

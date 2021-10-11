@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/arsmn/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql"
 	"github.com/urfave/cli/v2"
 )
 

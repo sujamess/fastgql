@@ -8,8 +8,8 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/arsmn/fastgql/codegen/config"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/codegen/config"
 )
 
 func TestFindField(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arsmn/fastgql/client"
-	"github.com/arsmn/fastgql/graphql/handler"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/client"
+	"github.com/sujamess/fastgql/graphql/handler"
 )
 
 func TestNullBubbling(t *testing.T) {
@@ -90,7 +90,7 @@ func TestNullBubbling(t *testing.T) {
 		resolvers.ErrorsResolver.D = func(ctx context.Context, obj *Errors) (i *Error, e error) { return nil, nil }
 		resolvers.ErrorsResolver.E = func(ctx context.Context, obj *Errors) (i *Error, e error) { return nil, nil }
 
-		err := c.Post(`{ errors { 
+		err := c.Post(`{ errors {
 			a { id },
 			b { id },
 			c { id },

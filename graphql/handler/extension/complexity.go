@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/arsmn/fastgql/complexity"
-	"github.com/arsmn/fastgql/graphql"
-	"github.com/arsmn/fastgql/graphql/errcode"
+	"github.com/sujamess/fastgql/complexity"
+	"github.com/sujamess/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql/errcode"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 

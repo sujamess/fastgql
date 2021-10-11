@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/arsmn/fastgql/internal/code"
+	"github.com/sujamess/fastgql/internal/code"
 
 	"github.com/stretchr/testify/require"
 )

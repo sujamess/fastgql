@@ -5,9 +5,9 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/arsmn/fastgql/codegen/config"
-	"github.com/arsmn/fastgql/codegen/templates"
 	"github.com/pkg/errors"
+	"github.com/sujamess/fastgql/codegen/config"
+	"github.com/sujamess/fastgql/codegen/templates"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 

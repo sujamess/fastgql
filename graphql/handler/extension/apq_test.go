@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/arsmn/fastgql/graphql"
-	"github.com/arsmn/fastgql/graphql/handler/extension"
-	"github.com/arsmn/fastgql/graphql/handler/testserver"
-	"github.com/arsmn/fastgql/graphql/handler/transport"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql/handler/extension"
+	"github.com/sujamess/fastgql/graphql/handler/testserver"
+	"github.com/sujamess/fastgql/graphql/handler/transport"
 	"github.com/valyala/fasthttp"
 )
 

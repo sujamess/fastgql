@@ -141,7 +141,7 @@ That invokes the following operation:
 }
 ```
 
-See the [example/fileupload](https://github.com/arsmn/fastgql/tree/master/example/fileupload) package for more examples.
+See the [example/fileupload](https://github.com/sujamess/fastgql/tree/master/example/fileupload) package for more examples.
 
 # Usage with Apollo
 

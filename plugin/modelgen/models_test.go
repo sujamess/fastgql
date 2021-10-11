@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arsmn/fastgql/codegen/config"
-	"github.com/arsmn/fastgql/plugin/modelgen/out"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/codegen/config"
+	"github.com/sujamess/fastgql/plugin/modelgen/out"
 )
 
 func TestModelGeneration(t *testing.T) {

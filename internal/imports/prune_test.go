@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arsmn/fastgql/internal/code"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/internal/code"
 )
 
 func TestPrune(t *testing.T) {

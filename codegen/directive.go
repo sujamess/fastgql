@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/arsmn/fastgql/codegen/templates"
 	"github.com/pkg/errors"
+	"github.com/sujamess/fastgql/codegen/templates"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 

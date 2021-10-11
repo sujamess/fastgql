@@ -3,7 +3,7 @@
 {{ reserveImport "fmt"  }}
 {{ reserveImport "strings"  }}
 
-{{ reserveImport "github.com/arsmn/fastgql/plugin/federation/fedruntime" }}
+{{ reserveImport "github.com/sujamess/fastgql/plugin/federation/fedruntime" }}
 
 func (ec *executionContext) __resolve__service(ctx context.Context) (fedruntime.Service, error) {
 	if ec.DisableIntrospection {
@@ -42,13 +42,13 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 						return nil, errors.New(fmt.Sprintf("Field %s undefined in schema.", "{{$keyField.Field.Name}}"))
 					}
 				{{end}}
-	
+
 				entity, err := ec.resolvers.Entity().{{.ResolverName | go}}(ctx,
 					{{ range $i, $_ := .KeyFields -}} id{{$i}}, {{end}})
 				if err != nil {
 					return nil, err
 				}
-	
+
 				{{ range .Requires }}
 					{{ range .Fields}}
 						entity.{{.NameGo}}, err = ec.{{.TypeReference.UnmarshalFunc}}(ctx, rep["{{.Name}}"])

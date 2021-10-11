@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arsmn/fastgql/client"
 	"github.com/stretchr/testify/require"
+	"github.com/sujamess/fastgql/client"
 	"github.com/valyala/fasthttp"
 )
 

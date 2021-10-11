@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/arsmn/fastgql/graphql"
-	"github.com/arsmn/fastgql/graphql/handler"
-	"github.com/arsmn/fastgql/graphql/handler/extension"
-	"github.com/arsmn/fastgql/graphql/handler/lru"
-	"github.com/arsmn/fastgql/graphql/handler/transport"
-	"github.com/arsmn/fastgql/graphql/playground"
 	"github.com/fasthttp/websocket"
+	"github.com/sujamess/fastgql/graphql"
+	"github.com/sujamess/fastgql/graphql/handler"
+	"github.com/sujamess/fastgql/graphql/handler/extension"
+	"github.com/sujamess/fastgql/graphql/handler/lru"
+	"github.com/sujamess/fastgql/graphql/handler/transport"
+	"github.com/sujamess/fastgql/graphql/playground"
 	"github.com/valyala/fasthttp"
 )
 

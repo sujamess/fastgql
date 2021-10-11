@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/vektah/gqlparser/v2/ast"
 
-	"github.com/arsmn/fastgql/codegen/config"
+	"github.com/sujamess/fastgql/codegen/config"
 )
 
 type Interface struct {
